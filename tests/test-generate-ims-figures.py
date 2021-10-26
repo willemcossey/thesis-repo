@@ -1,0 +1,1 @@
+#run DMC simulation and compare with Fokker-Planck steady opinion profile
