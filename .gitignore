@@ -1,2 +1,3 @@
 .idea
 thesis-env
+src/helper/__pycache__/*
