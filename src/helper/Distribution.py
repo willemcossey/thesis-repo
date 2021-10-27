@@ -3,7 +3,6 @@ from numpy import random
 
 
 class Distribution(ABC):
-
     def __init__(self):
         pass
 
@@ -13,7 +12,6 @@ class Distribution(ABC):
 
 
 class Uniform(Distribution):
-
     def __init__(self, lower=0, upper=1):
         Distribution.__init__(self)
         self.lower = lower
@@ -22,9 +20,9 @@ class Uniform(Distribution):
     def sample(self, amount=1):
         return list(random.uniform(self.lower, self.upper, amount))
 
-class Normal(Distribution):
 
-    def __init__(self, mean = 0, std = 1):
+class Normal(Distribution):
+    def __init__(self, mean=0, std=1):
         Distribution.__init__(self)
         self.mean = mean
         self.std = std
