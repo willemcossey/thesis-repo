@@ -1,4 +1,7 @@
 from helper.Distribution import Distribution, Normal
+import numpy as np
+
+# As described in P&T p. 227
 
 
 class OpinionModel:
@@ -34,7 +37,12 @@ class OpinionModel:
             + two_theta[1] * self.D(abs(new_samples[1]))
         )
 
-        assert isinstance(new_samples[0], float)
-        assert isinstance(new_samples[1], float)
+        #check if new samples not nan and \in [-1,1] (apply Beta_int)
+
+        new_samples[0] = new_samples[0] if ((new_samples[0] >= -1) & (new_samples[0] <= 1)) else two_samples[0].copy()
+        new_samples[1] = new_samples[1] if ((new_samples[1] >= -1) & (new_samples[1] <= 1)) else two_samples[1].copy()
+
+        assert not np.isnan(new_samples[0])
+        assert not np.isnan(new_samples[1])
 
         return new_samples
