@@ -1,3 +1,4 @@
 .idea
 thesis-env
 *.pyc
+.coverage
