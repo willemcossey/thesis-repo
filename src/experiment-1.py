@@ -11,6 +11,7 @@ matplotlib.use("qt5agg")
 
 # Parameter initialization
 lamb = 2
+mean_opinion = 0.1
 nagents = 5000
 t_horiz = 30
 
@@ -30,7 +31,7 @@ def inv_dist(w, m, lam):
 # compute reference solution as described p. 241
 resolution = 1000
 x = np.linspace(-0.99, 1, num=resolution, endpoint=False)
-y = [inv_dist(s, 0, lamb) for s in x]
+y = [inv_dist(s, mean_opinion, lamb) for s in x]
 data = [x, y]
 data = np.transpose(data)
 reference = pd.DataFrame(data=data, columns=["w", "g_inf(w)"])
@@ -41,7 +42,8 @@ sim = SimulationJob(
     theta_std,
     lambda g, w: (1 - g) / (1 + abs(w)),
     lambda w: 1,
-    lambda w: (1 - w ** 2),  # P&T p. 241
+    lambda w: (1 - w ** 2), # P&T p. 241
+    mean_opinion,
     t_horiz,
     nagents,
 )

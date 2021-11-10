@@ -4,6 +4,7 @@ import pytest
 
 # Create fixtures
 
+
 def example_normal_dist():
     return Normal()
 
@@ -34,7 +35,7 @@ class TestDistribution:
     @pytest.mark.parametrize("distribution", all_dist_example_list())
     def test_sample_string_amount(self, distribution):
         with pytest.raises(TypeError):
-            distribution.sample(amount='two')
+            distribution.sample(amount="two")
 
     #     uniform dist
     #         test smaller upper than lower
@@ -51,7 +52,7 @@ class TestDistribution:
     #         wrong type std
     def test_std_string_type(self):
         with pytest.raises(AssertionError):
-            Normal(0, '0.1')
+            Normal(0, "0.1")
 
     #         neg std
     def test_negative_standard_deviation(self):
@@ -69,3 +70,9 @@ class TestDistribution:
     @pytest.mark.parametrize("amount", [1, 10, 10000])
     def test_sample_return_length(self, amount):
         pass
+
+    # truncated normal distribution
+    @pytest.mark.parametrize("bounds", [[-1, 1], [-0.1, 0.1], [-5, 5]])
+    def test_bounds_respected(self, bounds):
+        samples = TruncatedNormal(0.1, 2, bounds).sample(10000)
+        assert all([(s <= bounds[1]) | (s >= bounds[0]) for s in samples])

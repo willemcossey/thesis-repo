@@ -3,14 +3,10 @@ import pytest
 
 
 def diff_type_arg_list():
-    return ['0.1', [0.1], set(), tuple()]
-
-
-
+    return ["0.1", [0.1], set(), tuple()]
 
 
 class TestOpinionModel:
-
     @pytest.fixture
     def default_opinion_model(self):
         return OpinionModel()
@@ -92,4 +88,6 @@ class TestOpinionModel:
     # check result sample value
     def test_return_sample_value(self, default_opinion_model):
         result = OpinionModel.apply_operator(default_opinion_model, [-1, 1])
-        assert (((result[0] <= 1) & (result[0] >= -1)) & ((result[1] <= 1) & (result[1] >= -1)))
+        assert ((result[0] <= 1) & (result[0] >= -1)) & (
+            (result[1] <= 1) & (result[1] >= -1)
+        )

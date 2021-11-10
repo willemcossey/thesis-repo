@@ -56,9 +56,9 @@ class TruncatedNormal(Distribution):
     def sample(self, amount: int = 1) -> list[float]:
         a = (self.bounds[0] - self.mean) / self.std * np.ones([amount, 1])
         b = (self.bounds[1] - self.mean) / self.std * np.ones([amount, 1])
-        loc = self.mean * np.ones([amount, 1])
+        loc = self.mean * np.ones([amount, 1])*self.std
 
-        samples_std_dist = truncnorm.rvs(a, b, loc=loc)
+        samples_std_dist = truncnorm.rvs(a, b)
         samples_result = (samples_std_dist * self.std) + self.mean
 
         # return samples as list
@@ -66,7 +66,7 @@ class TruncatedNormal(Distribution):
             samples_result.tolist()
             if amount == 1
             else list(
-                chain.from_iterable(np.transpose(truncnorm.rvs(a, b, loc=loc)).tolist())
+                chain.from_iterable(np.transpose(samples_result).tolist())
             )
         )
 
