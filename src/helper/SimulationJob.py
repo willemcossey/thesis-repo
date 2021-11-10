@@ -1,6 +1,7 @@
 from random import randrange
 from helper.Distribution import Uniform
 from helper.OpinionModel import OpinionModel
+from tqdm import tqdm
 
 
 class SimulationJob:
@@ -26,7 +27,7 @@ class SimulationJob:
         n_steps = self.time_horizon * self.n_samples
         # for counter = 0, n_iterations
         it = 0
-        while it < n_steps:
+        for it in tqdm(range(n_steps)):
             # select random pair (non-local)
 
             bob = randrange(0, self.n_samples)
