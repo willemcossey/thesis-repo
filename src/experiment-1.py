@@ -9,13 +9,15 @@ matplotlib.use("qt5agg")
 
 # case: P = 1, D = 1-w^2
 
-lamb = 0.1
+# Parameter initialization
+lamb = 2
+nagents = 5000
+t_horiz = 30
+
 theta_std = 0.1
 gamma = (theta_std ** 2) / lamb
 print(f"gamma= {gamma}")
 print(f"theta_std = {theta_std}")
-
-exponent = 1
 
 
 def inv_dist(w, m, lam):
@@ -27,7 +29,6 @@ def inv_dist(w, m, lam):
 
 # compute reference solution as described p. 241
 resolution = 1000
-
 x = np.linspace(-0.99, 1, num=resolution, endpoint=False)
 y = [inv_dist(s, 0, lamb) for s in x]
 data = [x, y]
@@ -41,12 +42,10 @@ sim = SimulationJob(
     lambda g, w: (1 - g) / (1 + abs(w)),
     lambda w: 1,
     lambda w: (1 - w ** 2),  # P&T p. 241
-    100,
-    10000,
+    t_horiz,
+    nagents,
 )
-
 sim.run()
-
 result_df = pd.Series(sim.result, name="opinion")
 
 # Generate histogram data
@@ -58,11 +57,17 @@ mean_sim_result = np.mean(counts)
 mean_ref_result = np.mean(reference["g_inf(w)"])
 reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w)"]
 
+np.save(f"experiment-data\experiment-1-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}", sim.result)
+
 # Generating figure
 plt.ion()
 fig = plt.figure()
 plt.bar(x=bins, height=counts, width=2 / len(bins))
 plt.plot(reference["w"], reference["g_inf(w)"], "r")
+plt.suptitle(f"Steady Opinion Profile for P = 1 and D = 1- w^2")
+plt.title(f"lambda= {lamb}, n= {nagents} and simulated time {t_horiz}s")
+plt.xlabel('Opinion []')
+plt.ylabel('Count []')
 cfm = plt.get_current_fig_manager()
 cfm.window.activateWindow()
 cfm.window.raise_()
