@@ -64,7 +64,7 @@ class OpinionModel:
         )
 
         theta_samples[1] = theta_dist.sample()
-        compromise[1] = self.gamma * self.P(abs(new_samples[0])) * diff
+        compromise[1] = self.gamma * self.P(abs(new_samples[1])) * diff
         diffusion[1] = theta_samples[1] * self.D(abs(new_samples[1]))
 
         new_samples[1] = new_samples[1] + compromise[1] + diffusion[1]
