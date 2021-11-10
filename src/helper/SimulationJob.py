@@ -4,8 +4,8 @@ from helper.OpinionModel import OpinionModel
 
 
 class SimulationJob:
-    def __init__(self, gamma, theta, p, d, t_end=1, n_samples=2000):
-        self.model = OpinionModel(gamma, theta, p, d)
+    def __init__(self, gamma, theta_std, theta_bound, p, d, t_end=1, n_samples=2000):
+        self.model = OpinionModel(gamma, p, d, theta_std, theta_bound)
         self.init_dist = Uniform(lower=-1, upper=1)
         self.time_horizon = t_end
         if n_samples > 1:
