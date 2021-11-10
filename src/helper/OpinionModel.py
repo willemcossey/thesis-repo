@@ -1,48 +1,75 @@
-from helper.Distribution import Distribution, Normal
-import numpy as np
+from src.helper.Distribution import Normal, TruncatedNormal
+
 
 # As described in P&T p. 227
 
 
 class OpinionModel:
     def __init__(
-        self, gamma=0.25, theta_dist=Normal(0, 0.05), p=lambda x: 1, d=lambda x: 1
+        self,
+        gamma: float = 0.25,
+        p: callable = lambda x: 1,
+        d: callable = lambda x: 1,
+        theta_std: float = 0.05,
+        theta_bound: callable = lambda gamma, w: (1 - gamma) / (1 + abs(w)),
     ):
+        if not isinstance(gamma, (float, int)):
+            raise TypeError
+        if not callable(p):
+            raise TypeError
+        if not callable(d):
+            raise TypeError
         assert (gamma >= 0) & (gamma <= 0.5)
-        assert issubclass(type(theta_dist), Distribution)
-        assert callable(p)
-        assert callable(d)
+        assert isinstance(theta_std, float)
+        assert callable(theta_bound)
         self.gamma = gamma
-        self.Theta = theta_dist
         self.P = p
         self.D = d
+        self.theta_std = theta_std
+        self.theta_bound = theta_bound
 
-    def apply_operator(self, two_samples) -> list:
-        assert type(two_samples) == list
+    def apply_operator(self, two_samples: list[(float, int)]) -> list:
         assert len(two_samples) == 2
+        assert ((two_samples[0] <= 1) & (two_samples[0] >= -1)) & (
+            (two_samples[1] <= 1) & (two_samples[1] >= -1)
+        )
 
         new_samples = two_samples.copy()
         diff = new_samples[0] - new_samples[1]
 
-        two_theta = self.Theta.sample(2)
+        theta_samples = [None] * 2
+        compromise = [None] * 2
+        diffusion = [None] * 2
 
-        new_samples[0] = (
-            new_samples[0]
-            - self.gamma * self.P(abs(new_samples[0])) * diff
-            + two_theta[0] * self.D(abs(new_samples[0]))
+        # first agent
+        theta_support = self.theta_bound(self.gamma, new_samples[0])
+        theta_dist = (
+            Normal(0, self.theta_std)
+            if (theta_support is None)
+            else TruncatedNormal(0, self.theta_std, [-1 * theta_support, theta_support])
         )
-        new_samples[1] = (
-            new_samples[1]
-            - self.gamma * self.P(abs(new_samples[1])) * diff
-            + two_theta[1] * self.D(abs(new_samples[1]))
+
+        theta_samples[0] = theta_dist.sample()
+        compromise[0] = -1 * self.gamma * self.P(abs(new_samples[0])) * diff
+        diffusion[0] = theta_samples[0] * self.D(abs(new_samples[0]))
+
+        new_samples[0] = new_samples[0] + compromise[0] + diffusion[0]
+
+        # second agent
+        theta_support = self.theta_bound(self.gamma, new_samples[1])
+        theta_dist = (
+            Normal(0, self.theta_std)
+            if (theta_support is None)
+            else TruncatedNormal(0, self.theta_std, [-1 * theta_support, theta_support])
         )
 
-        #check if new samples not nan and \in [-1,1] (apply Beta_int)
+        theta_samples[1] = theta_dist.sample()
+        compromise[1] = self.gamma * self.P(abs(new_samples[0])) * diff
+        diffusion[1] = theta_samples[1] * self.D(abs(new_samples[1]))
 
-        new_samples[0] = new_samples[0] if ((new_samples[0] >= -1) & (new_samples[0] <= 1)) else two_samples[0].copy()
-        new_samples[1] = new_samples[1] if ((new_samples[1] >= -1) & (new_samples[1] <= 1)) else two_samples[1].copy()
+        new_samples[1] = new_samples[1] + compromise[1] + diffusion[1]
 
-        assert not np.isnan(new_samples[0])
-        assert not np.isnan(new_samples[1])
+        assert (new_samples[0] >= -1) & (new_samples[0] <= 1)
+        assert (new_samples[1] >= -1) & (new_samples[1] <= 1)
 
         return new_samples
