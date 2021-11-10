@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
-from numpy import random
+import numpy as np
+from scipy.stats import truncnorm
+from itertools import chain
+
 
 
 class Distribution(ABC):
@@ -20,7 +23,7 @@ class Uniform(Distribution):
         self.upper = upper
 
     def sample(self, amount: int = 1) -> list[float]:
-        return list(random.uniform(self.lower, self.upper, amount))
+        return list(np.random.uniform(self.lower, self.upper, amount))
 
 
 class Normal(Distribution):
@@ -33,4 +36,26 @@ class Normal(Distribution):
         self.std = std
 
     def sample(self, amount: int = 1) -> list[float]:
-        return list(random.normal(self.mean, self.std, amount))
+        return list(np.random.normal(self.mean, self.std, amount))
+
+
+class TruncatedNormal(Distribution):
+    def __init__(self, mean=0, std=1, bounds=None):
+        Distribution.__init__(self)
+        if bounds is None:
+            bounds = [-1, 1]
+        assert isinstance(mean, (float, int))
+        assert isinstance(std, (float, int))
+        assert std > 0
+        assert isinstance(bounds, list)
+        assert len(bounds) == 2
+        assert bounds[1] >= bounds[0]
+        self.mean = mean
+        self.std = std
+        self.bounds = bounds
+
+    def sample(self, amount: int = 1) -> list[float]:
+        a = (self.bounds[0] - self.mean) / self.std * np.ones([amount, 1])
+        b = (self.bounds[1] - self.mean) / self.std * np.ones([amount, 1])
+        loc = self.mean * np.ones([amount, 1])
+        return list(chain.from_iterable(np.transpose(truncnorm.rvs(a, b, loc=loc)).tolist()))
