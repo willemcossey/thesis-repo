@@ -41,8 +41,8 @@ sim = SimulationJob(
     lambda g, w: 1 - g,
     lambda w: 1,
     lambda w: 1 - abs(w),  # P&T p. 241-242
-    t_horiz,
-    nagents,
+    t_end=t_horiz,
+    n_samples=nagents,
 )
 sim.run()
 result_df = pd.Series(sim.result, name="opinion")
