@@ -15,12 +15,7 @@ gamma = (theta_std ** 2) / lamb
 print(f"gamma= {gamma}")
 print(f"theta_std = {theta_std}")
 
-w_ = [-0.3, 0.7]
-rho = 0.5
-
 exponent = 1
-
-# compute reference solution as described p. 241
 
 
 def inv_dist(w, m, lam):
@@ -30,6 +25,7 @@ def inv_dist(w, m, lam):
     return res
 
 
+# compute reference solution as described p. 241
 resolution = 1000
 
 x = np.linspace(-0.99, 1, num=resolution, endpoint=False)
@@ -39,7 +35,6 @@ data = np.transpose(data)
 reference = pd.DataFrame(data=data, columns=["w", "g_inf(w)"])
 
 # run MC simulation
-
 sim = SimulationJob(
     gamma,
     theta_std,
@@ -54,8 +49,7 @@ sim.run()
 
 result_df = pd.Series(sim.result, name="opinion")
 
-# computing histogram data
-
+# Generate histogram data
 counts, bins = np.histogram(result_df, bins=np.linspace(-1, 1, 200))
 bins = 0.5 * (bins[:-1] + bins[1:])
 
@@ -66,7 +60,6 @@ reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w
 
 # Generating figure
 plt.ion()
-
 fig = plt.figure()
 plt.bar(x=bins, height=counts, width=2 / len(bins))
 plt.plot(reference["w"], reference["g_inf(w)"], "r")
