@@ -25,6 +25,7 @@ class Uniform(Distribution):
         return list(np.random.uniform(self.lower, self.upper, amount))
 
 
+
 class Normal(Distribution):
     def __init__(self, mean=0, std=1):
         Distribution.__init__(self)
@@ -35,7 +36,7 @@ class Normal(Distribution):
         self.std = std
 
     def sample(self, amount: int = 1) -> list[float]:
-        return list(np.random.normal(self.mean, self.std, amount))
+        return list(chain.from_iterable(list(np.random.normal(self.mean, self.std, amount))))
 
 
 class TruncatedNormal(Distribution):
