@@ -5,7 +5,17 @@ from tqdm import tqdm
 
 
 class SimulationJob:
-    def __init__(self, gamma, theta_std, theta_bound, p, d, mean_opinion: [float, int] = 0, t_end=1, n_samples=2000):
+    def __init__(
+        self,
+        gamma,
+        theta_std,
+        theta_bound,
+        p,
+        d,
+        mean_opinion: [float, int] = 0,
+        t_end=1,
+        n_samples=2000,
+    ):
         self.model = OpinionModel(gamma, p, d, theta_std, theta_bound)
         self.init_dist = TruncatedNormal(mean_opinion, 0.5, [-1, 1])
         self.time_horizon = t_end

@@ -3,3 +3,7 @@ repos:
     rev: 0.3.9
     hooks:
     -   id: nbstripout
+-   repo: https://github.com/psf/black
+    rev: 21.11b1
+    hooks:
+    -   id: black
