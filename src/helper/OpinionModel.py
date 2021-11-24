@@ -12,7 +12,8 @@ class OpinionModel:
         p: callable = lambda x: 1,
         d: callable = lambda x: 1,
         theta_std: float = 0.05,
-        theta_bound: callable = lambda gamma, w: (1 - gamma) / (1 + abs(w)),
+        theta_bnd: callable = lambda gamma, w: (1 - gamma) / (1 + abs(w)),
+        uniform_theta: bool = False,
     ):
         if not isinstance(gamma, (float, int)):
             raise TypeError
@@ -22,14 +23,13 @@ class OpinionModel:
             raise TypeError
         assert (gamma >= 0) & (gamma <= 0.5)
         assert isinstance(theta_std, float)
-        assert callable(theta_bound)
+        assert callable(theta_bnd)
         self.gamma = gamma
         self.P = p
         self.D = d
         self.theta_std = theta_std
-        self.theta_bound = theta_bound
-
-
+        self.theta_bound = theta_bnd
+        self.uniform_theta = uniform_theta
 
     def apply_operator(self, two_samples: list[(float, int)]) -> list:
         assert len(two_samples) == 2
@@ -48,7 +48,7 @@ class OpinionModel:
         theta_support = self.theta_bound(self.gamma, new_samples[0])
         theta_dist = self.get_theta_dist(theta_support)
 
-        theta_samples[0] = float(theta_dist.sample())
+        theta_samples[0] = theta_dist.sample()[0]
         compromise[0] = -1 * self.gamma * self.P(abs(new_samples[0])) * diff
         diffusion[0] = theta_samples[0] * self.D(abs(new_samples[0]))
 
@@ -58,7 +58,7 @@ class OpinionModel:
         theta_support = self.theta_bound(self.gamma, new_samples[1])
         theta_dist = self.get_theta_dist(theta_support)
 
-        theta_samples[1] = float(theta_dist.sample())
+        theta_samples[1] = theta_dist.sample()[0]
         compromise[1] = self.gamma * self.P(abs(new_samples[1])) * diff
         diffusion[1] = theta_samples[1] * self.D(abs(new_samples[1]))
 
@@ -73,9 +73,9 @@ class OpinionModel:
         if support is None:
             return Normal(0, self.theta_std)
         else:
-            return TruncatedNormal(0, self.theta_std, [-support, support])
-            # b = sqrt(12) * self.theta_std / 2
-            # assert b <= support
-            # return Uniform(-b, b)
-
-
+            if self.uniform_theta:
+                b = sqrt(12) * self.theta_std / 2
+                assert b <= support
+                return Uniform(-b, b)
+            else:
+                return TruncatedNormal(0, self.theta_std, [-support, support])

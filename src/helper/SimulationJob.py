@@ -15,9 +15,13 @@ class SimulationJob:
         mean_opinion: [float, int] = 0,
         t_end=1,
         n_samples=2000,
+        uniform_theta=False,
     ):
-        self.model = OpinionModel(gamma, p, d, theta_std, theta_bound)
-        self.init_dist = TruncatedNormal(mean_opinion, 0.5, [-1, 1])
+        self.model = OpinionModel(gamma, p, d, theta_std, theta_bound, uniform_theta)
+        # self.init_dist = TruncatedNormal(mean_opinion, 0.5, [-1, 1]) #wrong mean
+        self.init_dist = Uniform(
+            -1 + max(2 * mean_opinion, 0), 1 + min(0, 2 * mean_opinion)
+        )
         self.time_horizon = t_end
         if n_samples > 1:
             self.n_samples = n_samples
