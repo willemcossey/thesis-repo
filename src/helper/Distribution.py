@@ -25,7 +25,6 @@ class Uniform(Distribution):
         return list(np.random.uniform(self.lower, self.upper, amount))
 
 
-
 class Normal(Distribution):
     def __init__(self, mean=0, std=1):
         Distribution.__init__(self)
@@ -36,7 +35,9 @@ class Normal(Distribution):
         self.std = std
 
     def sample(self, amount: int = 1) -> list[float]:
-        return list(chain.from_iterable(list(np.random.normal(self.mean, self.std, amount))))
+        return list(
+            chain.from_iterable(list(np.random.normal(self.mean, self.std, amount)))
+        )
 
 
 class TruncatedNormal(Distribution):
@@ -57,18 +58,16 @@ class TruncatedNormal(Distribution):
     def sample(self, amount: int = 1) -> list[float]:
         a = (self.bounds[0] - self.mean) / self.std * np.ones([amount, 1])
         b = (self.bounds[1] - self.mean) / self.std * np.ones([amount, 1])
-        loc = self.mean * np.ones([amount, 1])*self.std
+        loc = self.mean * np.ones([amount, 1]) * self.std
 
         samples_std_dist = truncnorm.rvs(a, b)
         samples_result = (samples_std_dist * self.std) + self.mean
 
         # return samples as list
         sample_lst = (
-            samples_result.tolist()
+            [float(samples_result)]
             if amount == 1
-            else list(
-                chain.from_iterable(np.transpose(samples_result).tolist())
-            )
+            else list(chain.from_iterable(np.transpose(samples_result).tolist()))
         )
 
         return sample_lst
