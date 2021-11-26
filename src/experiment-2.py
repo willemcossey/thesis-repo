@@ -1,5 +1,5 @@
 from helper.SimulationJob import SimulationJob
-from math import exp
+from math import exp, sqrt
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -11,18 +11,20 @@ matplotlib.use("qt5agg")
 
 # Parameter initialization
 lamb = 1.2
-nagents = 5000
-t_horiz = 30
+nagents = 10000
+t_horiz = 10000
 
-theta_std = 0.08
-gamma = (theta_std ** 2) / lamb
+# theta_std = 0.08
+# gamma = (theta_std ** 2) / lamb
+gamma = 0.001
+theta_std = sqrt(gamma * lamb)
 print(f"gamma= {gamma}")
 print(f"theta_std = {theta_std}")
 
 
 def inv_dist(w, m, lam):
     res = (1 - abs(w)) ** (-2 - (2 / lam))
-    res = res * exp(-((1 - (m * w/abs(w))) / (2 * lam * (1 - abs(w)))))
+    res = res * exp(-((1 - (m * w / abs(w))) / (2 * lam * (1 - abs(w)))))
     return res
 
 
@@ -43,6 +45,7 @@ sim = SimulationJob(
     lambda w: 1 - abs(w),  # P&T p. 241-242
     t_end=t_horiz,
     n_samples=nagents,
+    uniform_theta=True,
 )
 sim.run()
 result_df = pd.Series(sim.result, name="opinion")
@@ -57,8 +60,10 @@ mean_ref_result = np.mean(reference["g_inf(w)"])
 reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w)"]
 
 
-
-np.save(f"experiment-data\experiment-2-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}", sim.result)
+np.save(
+    f"experiment-data\experiment-2-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}",
+    sim.result,
+)
 
 # Generating figure
 plt.ion()
@@ -66,9 +71,9 @@ fig = plt.figure()
 plt.bar(x=bins, height=counts, width=2 / len(bins))
 plt.plot(reference["w"], reference["g_inf(w)"], "r")
 plt.suptitle(f"Steady Opinion Profile for P = 1 and D = 1- |w|")
-plt.title(f"lambda= {lamb}, n= {nagents} and simulated time {t_horiz}s")
-plt.xlabel('Opinion []')
-plt.ylabel('Count []')
+plt.title(f"lambda= {lamb}, n= {nagents} and {t_horiz} simulated time units")
+plt.xlabel("Opinion []")
+plt.ylabel("Count []")
 cfm = plt.get_current_fig_manager()
 cfm.window.activateWindow()
 cfm.window.raise_()
