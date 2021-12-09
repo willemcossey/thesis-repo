@@ -28,6 +28,7 @@ class SimulationJob:
         else:
             raise ValueError("Number of samples should be at least 2")
         self.result = None
+        self.hide_progress = False
 
     def run(self):
         # based on P&T p.135 bottom of page
@@ -41,7 +42,7 @@ class SimulationJob:
         n_steps = self.time_horizon * self.n_samples
         # for counter = 0, n_iterations
         it = 0
-        for it in tqdm(range(n_steps)):
+        for it in tqdm(range(n_steps), disable=self.hide_progress):
             # select random pair (non-local)
 
             bob = randrange(0, self.n_samples)
