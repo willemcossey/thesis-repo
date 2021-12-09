@@ -13,7 +13,7 @@ class ExperimentVisualizer:
     @staticmethod
     def from_file(filename):
         try:
-            filepath = pth.join("experiment-data", filename)
+            filepath = pth.join("../experiment-data", filename)
             experiment_data = np.load(filepath)
             ExperimentVisualizer.from_array(experiment_data)
         except IOError:
