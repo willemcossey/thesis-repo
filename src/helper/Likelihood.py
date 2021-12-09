@@ -4,7 +4,7 @@ from math import sqrt
 from src.helper.SampleCollection import SampleCollection
 
 
-class LikeliHood:
+class _LikeliHood:
     def __init__(
         self,
         data,
@@ -20,11 +20,19 @@ class LikeliHood:
         pass
 
 
-class SimulationLikelihood(LikeliHood):
+class SimulationLikelihood(_LikeliHood):
+    def __init__(
+        self,
+        data,
+        parameters,
+        experiment_assumptions,
+    ):
+        _LikeliHood.__init__(self, data, parameters, experiment_assumptions)
+
     def evaluate(self):
         # generate simulated outcome from parameters
-        m = self.parameters[0]
-        lmb = self.parameters[1]
+        m = self.parameters["m"]
+        lmb = self.parameters["lmb"]
 
         gamma = self.experiment_assumptions["gamma"]
         theta_std = sqrt(gamma * lmb)
@@ -40,6 +48,7 @@ class SimulationLikelihood(LikeliHood):
             self.experiment_assumptions["nagents"],
             uniform_theta=True,
         )
+        sim.hide_progress = True
         sim.run()
         # compare observed data with simulated outcome
         outcome = SampleCollection(sim.result)
