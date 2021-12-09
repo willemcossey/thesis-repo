@@ -4,20 +4,9 @@ from tqdm import tqdm
 
 
 class InverseProblem:
-    def __init__(self, observed_data):
+    def __init__(self, observed_data, experiment_assumptions):
         self.observed_data = observed_data
-        gamma = 0.01
-        assert gamma > 0
-        self.experiment_assumptions = dict(
-            free_parameters={"lmb", "m"},
-            theta_bound=lambda g, w: (1 - g) / (1 + abs(w)),
-            gamma=gamma,
-            lmb_bound=(1 / (3 * gamma) - 2 / 3 + gamma / 3),
-            p=lambda w: 1,
-            d=lambda w: (1 - w ** 2),
-            t_horiz=200,
-            nagents=10000,
-        )
+        self.experiment_assumptions = experiment_assumptions
         self.prior_dict = dict(
             lmb=Uniform(0, self.experiment_assumptions["lmb_bound"]), m=Uniform(-1, 1)
         )
