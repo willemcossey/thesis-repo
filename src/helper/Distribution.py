@@ -25,7 +25,10 @@ class Uniform(Distribution):
         return list(np.random.uniform(self.lower, self.upper, amount))
 
     def evaluate(self, p):
-        return 1 / (self.upper - self.lower)
+        if (p >= self.lower) & (p <= self.upper):
+            return 1 / (self.upper - self.lower)
+        else:
+            return 0
 
 
 class Normal(Distribution):
@@ -38,9 +41,7 @@ class Normal(Distribution):
         self.std = std
 
     def sample(self, amount: int = 1) -> list[float]:
-        return list(
-            chain.from_iterable(list(np.random.normal(self.mean, self.std, amount)))
-        )
+        return np.random.normal(self.mean, self.std, (1, amount)).tolist()[0]
 
 
 class TruncatedNormal(Distribution):
