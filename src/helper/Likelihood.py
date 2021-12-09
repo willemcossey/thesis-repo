@@ -9,17 +9,8 @@ class LikeliHood:
         self,
         data,
         parameters,
-        experiment_assumptions=None,
+        experiment_assumptions,
     ):
-        if experiment_assumptions is None:
-            experiment_assumptions = dict(
-                theta_bound=lambda g, w: (1 - g) / (1 + abs(w)),
-                p=lambda w: 1,
-                d=lambda w: (1 - w ** 2),
-                t_horiz=200,
-                nagents=10000,
-                gamma=0.01,
-            )
         self.data = data
         self.parameters = parameters
         self.experiment_assumptions = experiment_assumptions
