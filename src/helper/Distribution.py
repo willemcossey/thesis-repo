@@ -17,12 +17,15 @@ class Distribution(ABC):
 class Uniform(Distribution):
     def __init__(self, lower: int = 0, upper: int = 1):
         Distribution.__init__(self)
-        assert upper >= lower
+        assert upper > lower
         self.lower = lower
         self.upper = upper
 
     def sample(self, amount: int = 1) -> list[float]:
         return list(np.random.uniform(self.lower, self.upper, amount))
+
+    def evaluate(self, p):
+        return 1 / (self.upper - self.lower)
 
 
 class Normal(Distribution):
