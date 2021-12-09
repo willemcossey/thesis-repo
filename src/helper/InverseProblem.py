@@ -13,14 +13,7 @@ class InverseProblem:
 
         # Solve inverse problem by Posterior Sampling using Metropolis Hastings
 
-    def solve(self):
-
-        solver_settings = dict(
-            num_rounds=10,
-            num_burn_in=0,
-            initial_sample=dict(lmb=0.1, m=0),
-            variation=dict(lmb=0.1, m=0.1),
-        )
+    def solve(self, solver_settings):
 
         # establish old sample Prior x LH
         current_sample = solver_settings["initial_sample"]
@@ -54,7 +47,7 @@ class InverseProblem:
         for key in old_sample.keys():
             new_sample[key] = (
                 new_sample[key]
-                + Normal(0, solver_settings["variation"][key]).sample()[0]
+                + Normal(0, solver_settings["proposal_std"][key]).sample()[0]
             )
         return new_sample
 
