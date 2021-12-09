@@ -74,7 +74,7 @@ class OpinionModel:
             return Normal(0, self.theta_std)
         else:
             if self.uniform_theta:
-                b = sqrt(12) * self.theta_std / 2
+                b = sqrt(3) * self.theta_std
                 assert b <= support
                 return Uniform(-b, b)
             else:
