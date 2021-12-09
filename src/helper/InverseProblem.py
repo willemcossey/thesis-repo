@@ -1,5 +1,5 @@
 from src.helper.Distribution import Uniform, Normal
-from src.helper.Likelihood import LikeliHood
+from src.helper.Likelihood import SimulationLikelihood
 from tqdm import tqdm
 
 
@@ -15,10 +15,9 @@ class InverseProblem:
 
     def solve(self):
 
-        # initialize parameters
         solver_settings = dict(
-            num_rounds=1000,
-            num_burn_in=300,
+            num_rounds=10,
+            num_burn_in=0,
             initial_sample=dict(lmb=0.1, m=0),
             variation=dict(lmb=0.1, m=0.1),
         )
@@ -51,21 +50,24 @@ class InverseProblem:
 
     def _propose_new_sample(self, old_sample, solver_settings):
         assert self._sound_sample(old_sample)
-        new_sample = old_sample
+        new_sample = old_sample.copy()
         for key in old_sample.keys():
             new_sample[key] = (
-                new_sample[key] + Normal(0, solver_settings["variation"][key]).sample()
+                new_sample[key]
+                + Normal(0, solver_settings["variation"][key]).sample()[0]
             )
         return new_sample
 
     def _evaluate_post_value(self, sample):
         assert self._sound_sample(sample)
-        return (
-            self._evaluate_prior(sample)
-            * LikeliHood(
+        prior = self._evaluate_prior(sample)
+        if prior == 0:
+            return prior
+        else:
+            lh = SimulationLikelihood(
                 self.observed_data, sample, self.experiment_assumptions
             ).evaluate()
-        )
+            return prior * lh
 
     def _determine_new_sample(self, new_sample, old_sample, old_sample_post_value):
 
