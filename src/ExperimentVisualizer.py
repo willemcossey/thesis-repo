@@ -11,19 +11,23 @@ class ExperimentVisualizer:
         pass
 
     @staticmethod
-    def from_file(self, filename):
+    def from_file(filename):
         try:
             filepath = pth.join("experiment-data", filename)
             experiment_data = np.load(filepath)
-            plt.figure()
-            counts, bins = np.histogram(experiment_data, bins=np.linspace(-1, 1, 200))
-            bins = 0.5 * (bins[:-1] + bins[1:])
-            plt.bar(x=bins, height=counts, width=2 / len(bins))
-            plt.xlabel("Opinion []")
-            plt.ylabel("Count []")
-            plt.show(block=True)
+            ExperimentVisualizer.from_array(experiment_data)
         except IOError:
             print(IOError)
             # print("This experiment hasn't been run")
 
         return None
+
+    @staticmethod
+    def from_array(arr):
+        plt.figure()
+        counts, bins = np.histogram(arr, bins=np.linspace(-1, 1, 200))
+        bins = 0.5 * (bins[:-1] + bins[1:])
+        plt.bar(x=bins, height=counts, width=2 / len(bins))
+        plt.xlabel("Opinion []")
+        plt.ylabel("Count []")
+        plt.show(block=True)
