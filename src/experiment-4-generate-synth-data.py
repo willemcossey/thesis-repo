@@ -5,8 +5,8 @@ from os.path import join
 from helper.ExperimentVisualizer import ExperimentVisualizer
 
 # initialize lambda and m
-lmb = 1
-m = 0
+lmb = 0.5
+m = -0.5
 
 gamma = 0.01
 theta_std = sqrt(gamma * lmb)
