@@ -1,0 +1,6 @@
+.idea
+thesis-env
+*.pyc
+.coverage
+src/experiment-data/*
+*ipynb_checkpoints*
