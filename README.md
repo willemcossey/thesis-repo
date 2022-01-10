@@ -1,9 +1,17 @@
-# thesis-repo
-
 ## About
+Masterproef-Willem-Cossey
 
 This repo contains the code for my Master's thesis. \
-Currently the experiments are about reproducing results from the book [Interacting Multiagent Systems](https://global.oup.com/academic/product/interacting-multiagent-systems-9780199655465?cc=be&lang=enn&#) by Pareschi & Toscani (referred to in the code as _P&T_).
+
+Experiment contents:
+*experiment 1-3: reproducing results from the book [Interacting Multiagent Systems](https://global.oup.com/academic/product/interacting-multiagent-systems-9780199655465?cc=be&lang=enn&#) by Pareschi & Toscani (referred to in the code as _P&T_).
+	1: case: P = 1, D = 1-w^2
+	2: case: P = 1, D = 1-abs(w)
+	3: case: P = 1, D = 1-w^2 for different values of lambda and mean opinion
+*experiment 4-5: validating MCMC parameter estimation routine
+	4: generate synthetic data and store locally
+	5: load synthetic data and estimate parameters used. Generate plots and store posterior samples.
+
 
 ## How to install
 
