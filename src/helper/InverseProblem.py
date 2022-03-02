@@ -1,6 +1,7 @@
 from src.helper.Distribution import Uniform, Normal
 from src.helper.Likelihood import SimulationLikelihood
 from tqdm import tqdm
+import numpy as np
 
 
 class InverseProblem:
@@ -80,3 +81,14 @@ class InverseProblem:
             & (len(parameters) == len(parameter_keys))
             & (set(parameters.keys()) == parameter_keys)
         )
+
+    @staticmethod
+    def add_noise(data, noise_std):
+        data = np.array(data)
+        noise_dist = Normal(0, noise_std)
+        noise = np.array(noise_dist.sample(amount=len(data)))
+        noisy_data = data+noise
+        for i in range(0, len(noisy_data)):
+            while abs(noisy_data[i]) > 1:
+                noisy_data[i] = data[i] + noise_dist.sample()
+        return noisy_data
