@@ -1,8 +1,7 @@
 ## About
 Masterproef-Willem-Cossey
 
-This repo contains the code for my Master's thesis stating from the _second semester_ .
-It was not possible to transfer git history.
+This repo contains the code for my Master's thesis
 
 Experiment contents:
 *experiment 1-3: reproducing results from the book [Interacting Multiagent Systems](https://global.oup.com/academic/product/interacting-multiagent-systems-9780199655465?cc=be&lang=enn&#) by Pareschi & Toscani (referred to in the code as _P&T_).
