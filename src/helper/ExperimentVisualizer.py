@@ -13,14 +13,14 @@ class ExperimentVisualizer:
     @staticmethod
     def from_file(filename):
         try:
-            filepath = pth.join("../experiment-data", filename)
+            filepath = pth.join("experiment-data", filename)
             experiment_data = np.load(filepath)
-            ExperimentVisualizer.from_array(experiment_data)
+            plt = ExperimentVisualizer.from_array(experiment_data)
+            return plt
         except IOError:
-            print(IOError)
-            # print("This experiment hasn't been run")
+            print("This experiment hasn't been run")
 
-        return None
+
 
     @staticmethod
     def from_array(arr):
@@ -31,6 +31,7 @@ class ExperimentVisualizer:
         plt.xlabel("Opinion []")
         plt.ylabel("Count []")
         plt.show(block=True)
+        return plt
 
     @staticmethod
     def from_samples_file(filename, burn_in, lmb, m, mode="hist"):
@@ -91,3 +92,5 @@ class ExperimentVisualizer:
 
         except IOError:
             print(f"Not found: {filename}")
+
+        return plt
