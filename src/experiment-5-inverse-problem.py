@@ -1,8 +1,8 @@
 import numpy as np
 import os.path
-from src.helper.Distribution import Normal
-from src.helper.InverseProblem import InverseProblem
-from src.helper.ExperimentVisualizer import ExperimentVisualizer
+from helper.Distribution import Normal,Uniform
+from helper.InverseProblem import InverseProblem
+from helper.ExperimentVisualizer import ExperimentVisualizer
 
 gamma = 0.01
 assert gamma > 0

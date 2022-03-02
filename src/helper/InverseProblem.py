@@ -1,5 +1,5 @@
-from src.helper.Distribution import Uniform, Normal
-from src.helper.Likelihood import SimulationLikelihood
+from helper.Distribution import Uniform, Normal
+from helper.Likelihood import SimulationLikelihood
 from tqdm import tqdm
 import numpy as np
 

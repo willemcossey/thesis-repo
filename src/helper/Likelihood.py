@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from src.helper.SimulationJob import SimulationJob
+from helper.SimulationJob import SimulationJob
 from math import sqrt
-from src.helper.SampleCollection import SampleCollection
+from helper.SampleCollection import SampleCollection
 
 
 class _LikeliHood:

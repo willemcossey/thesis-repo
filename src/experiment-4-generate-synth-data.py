@@ -1,4 +1,4 @@
-from src.helper.SimulationJob import SimulationJob
+from helper.SimulationJob import SimulationJob
 from math import sqrt
 import numpy as np
 from os.path import join

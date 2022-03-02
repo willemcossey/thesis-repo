@@ -1,4 +1,4 @@
-from src.helper.Distribution import Normal, TruncatedNormal, Uniform
+from helper.Distribution import Normal, TruncatedNormal, Uniform
 from math import sqrt
 
 
