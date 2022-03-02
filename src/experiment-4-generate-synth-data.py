@@ -4,9 +4,21 @@ import numpy as np
 from os.path import join
 from helper.ExperimentVisualizer import ExperimentVisualizer
 
-# initialize lambda and m
-lmb = 0.5
-m = -0.5
+import argparse
+
+parser = argparse.ArgumentParser(description='Generate synthetic data.')
+
+parser.add_argument("-l", "--lambda", dest="lmb",type=float, default = 1, help="lambda value")
+parser.add_argument("-m", "--mean", dest="m", type=float,default = 0, help="mean opinion value")
+parser.add_argument("-t", "--t_horiz", dest="t_horiz", type=int,default = 200, help="time horizon")
+parser.add_argument("-n", "--nagents", dest="nagents", type=int,default = 10000, help="number of agents")
+
+args = parser.parse_args()
+
+lmb = args.lmb
+m = args.m
+
+print(lmb, type(lmb), m, type(m))
 
 gamma = 0.01
 theta_std = sqrt(gamma * lmb)
@@ -18,8 +30,8 @@ experiment_assumptions = dict(
     lmb_bound=(1 / (3 * gamma) - 2 / 3 + gamma / 3),
     p=lambda w: 1,
     d=lambda w: (1 - w ** 2),
-    t_horiz=200,
-    nagents=10000,
+    t_horiz=args.t_horiz,
+    nagents=args.nagents,
 )
 
 synth_t_horiz = experiment_assumptions["t_horiz"]
@@ -40,16 +52,17 @@ synth_job = SimulationJob(
 synth_job.run()
 synth = synth_job.result
 
+out_filename = f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}"
 
 np.save(
     join(
         "experiment-data",
-        f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}",
+        out_filename,
     ),
     synth,
 )
 
-print(f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}")
+print(out_filename)
 
 ExperimentVisualizer.from_file(
     f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}"
