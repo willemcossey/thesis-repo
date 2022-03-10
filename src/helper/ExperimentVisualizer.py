@@ -18,7 +18,8 @@ class ExperimentVisualizer:
             plt = ExperimentVisualizer.from_array(experiment_data)
             return plt
         except IOError:
-            print("This experiment hasn't been run")
+            print(f"Not found: {filepath}")
+
 
 
 
@@ -43,15 +44,15 @@ class ExperimentVisualizer:
             if mode == "hist":
                 f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
                 counts, bins = np.histogram(
-                    experiment_data["lmb"][num_burn_in:],
-                    bins=np.linspace(0, 2 * lmb, 200),
+                    experiment_data['lmb'][num_burn_in:],
+                    bins=np.linspace(0, max(2 , 2*lmb), 200),
                 )
                 bins = 0.5 * (bins[:-1] + bins[1:])
                 ax1.bar(x=bins, height=counts, width=2 / len(bins))
                 ax1.set_xlabel("lambda []")
                 ax1.set_ylabel("Count []")
                 counts, bins = np.histogram(
-                    experiment_data["m"][num_burn_in:], bins=np.linspace(-1, 1, 200)
+                    experiment_data['m'][num_burn_in:], bins=np.linspace(-1, 1, 200)
                 )
                 bins = 0.5 * (bins[:-1] + bins[1:])
                 ax2.bar(x=bins, height=counts, width=2 / len(bins))
