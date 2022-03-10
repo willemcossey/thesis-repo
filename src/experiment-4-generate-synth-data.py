@@ -3,6 +3,7 @@ from math import sqrt
 import numpy as np
 from os.path import join
 from helper.ExperimentVisualizer import ExperimentVisualizer
+import random
 
 import argparse
 
@@ -10,10 +11,20 @@ parser = argparse.ArgumentParser(description='Generate synthetic data.')
 
 parser.add_argument("-l", "--lambda", dest="lmb",type=float, default = 1, help="lambda value")
 parser.add_argument("-m", "--mean", dest="m", type=float,default = 0, help="mean opinion value")
-parser.add_argument("-t", "--t_horiz", dest="t_horiz", type=int,default = 200, help="time horizon")
-parser.add_argument("-n", "--nagents", dest="nagents", type=int,default = 10000, help="number of agents")
+parser.add_argument("-t", "--t_horiz", dest="t_horiz", type=int,default = 50, help="time horizon")
+parser.add_argument("-n", "--nagents", dest="nagents", type=int,default = 100, help="number of agents")
+parser.add_argument("-r","--rng_seed",dest="seed",type=int,default=None,help='random number generator seed to be used')
+parser.add_argument('--show', action='store_true')
 
 args = parser.parse_args()
+
+if args.seed is None:
+    seed = random.randint(1, 2**32 - 1)
+else:
+    seed = args.seed
+
+random.seed(seed)
+np.random.seed(seed)
 
 lmb = args.lmb
 m = args.m
@@ -35,7 +46,7 @@ experiment_assumptions = dict(
 )
 
 synth_t_horiz = experiment_assumptions["t_horiz"]
-synth_nagents = experiment_assumptions["nagents"] * 10
+synth_nagents = experiment_assumptions["nagents"]
 
 # create synthetic data
 synth_job = SimulationJob(
@@ -52,7 +63,7 @@ synth_job = SimulationJob(
 synth_job.run()
 synth = synth_job.result
 
-out_filename = f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}"
+out_filename = f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}-seed-{seed}"
 
 np.save(
     join(
@@ -64,7 +75,7 @@ np.save(
 
 print(out_filename)
 
-ExperimentVisualizer.from_file(
-    f"synth-data-lmb-{lmb}-m-{m}-t_horiz-{synth_t_horiz}-nagents-{synth_nagents}"
-    + ".npy"
-)
+print(args.show)
+
+if args.show:
+    ExperimentVisualizer.from_file(out_filename+".npy")
