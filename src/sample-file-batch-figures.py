@@ -30,8 +30,8 @@ print(len(pathdict['paths']),len(pathdict['m']),len(pathdict['l']),len(pathdict[
 
 for i in range(len(pathdict['paths'])):
     f = ExperimentVisualizer.from_samples_file("experiment-data\\"+pathdict["paths"][i],pathdict["b"][i],pathdict["l"][i],pathdict["m"][i])
-    f.savefig(f"hist-from--{pathdict['paths'][i][:-15]}-.png")
+    f.savefig(f"hist-from--{pathdict['paths'][i]}-.png")
     f = ExperimentVisualizer.from_samples_file("experiment-data\\" + pathdict["paths"][i], pathdict["b"][i],
                                                  pathdict["l"][i], pathdict["m"][i], mode='series')
-    f.savefig(f"series-from--{pathdict['paths'][i][:-15]}-.png")
+    f.savefig(f"series-from--{pathdict['paths'][i]}-.png")
 
