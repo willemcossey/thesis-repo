@@ -7,19 +7,34 @@ import random
 
 import argparse
 
-parser = argparse.ArgumentParser(description='Generate synthetic data.')
+parser = argparse.ArgumentParser(description="Generate synthetic data.")
 
-parser.add_argument("-l", "--lambda", dest="lmb",type=float, default = 1, help="lambda value")
-parser.add_argument("-m", "--mean", dest="m", type=float,default = 0, help="mean opinion value")
-parser.add_argument("-t", "--t_horiz", dest="t_horiz", type=int,default = 50, help="time horizon")
-parser.add_argument("-n", "--nagents", dest="nagents", type=int,default = 100, help="number of agents")
-parser.add_argument("-r","--rng_seed",dest="seed",type=int,default=None,help='random number generator seed to be used')
-parser.add_argument('--show', action='store_true')
+parser.add_argument(
+    "-l", "--lambda", dest="lmb", type=float, default=1, help="lambda value"
+)
+parser.add_argument(
+    "-m", "--mean", dest="m", type=float, default=0, help="mean opinion value"
+)
+parser.add_argument(
+    "-t", "--t_horiz", dest="t_horiz", type=int, default=50, help="time horizon"
+)
+parser.add_argument(
+    "-n", "--nagents", dest="nagents", type=int, default=100, help="number of agents"
+)
+parser.add_argument(
+    "-r",
+    "--rng_seed",
+    dest="seed",
+    type=int,
+    default=None,
+    help="random number generator seed to be used",
+)
+parser.add_argument("--show", action="store_true")
 
 args = parser.parse_args()
 
 if args.seed is None:
-    seed = random.randint(1, 2**32 - 1)
+    seed = random.randint(1, 2 ** 32 - 1)
 else:
     seed = args.seed
 
@@ -78,4 +93,4 @@ print(out_filename)
 print(args.show)
 
 if args.show:
-    ExperimentVisualizer.from_file(out_filename+".npy")
+    ExperimentVisualizer.from_file(out_filename + ".npy")
