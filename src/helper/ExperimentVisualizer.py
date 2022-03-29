@@ -43,25 +43,16 @@ class ExperimentVisualizer:
             experiment_data = np.load(filepath)
             if mode == "hist":
                 f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
-                counts, bins = np.histogram(
-                    experiment_data['lmb'][num_burn_in:],
-                    bins=np.linspace(0, max(2 , 2*lmb), 200),
-                )
-                bins = 0.5 * (bins[:-1] + bins[1:])
-                ax1.bar(x=bins, height=counts, width=2 / len(bins))
+                ax1.hist(experiment_data['lmb'][num_burn_in:], bins=np.linspace(0,max(max(experiment_data["lmb"][num_burn_in:]),2,2*lmb),200))
                 ax1.set_xlabel("lambda []")
                 ax1.set_ylabel("Count []")
-                counts, bins = np.histogram(
-                    experiment_data['m'][num_burn_in:], bins=np.linspace(-1, 1, 200)
-                )
-                bins = 0.5 * (bins[:-1] + bins[1:])
-                ax2.bar(x=bins, height=counts, width=2 / len(bins))
+                ax2.hist(experiment_data['m'][num_burn_in:], bins=np.linspace(-1,1,200))
                 ax2.set_xlabel("mean opinion []")
                 ax2.set_ylabel("Count []")
                 f.suptitle(
                     f"Estimated parameters for data with underlying lambda = {lmb} and m = {m} \n ensemble avgs: lambda = {np.mean(experiment_data['lmb'][num_burn_in:]): .2f}, m = {np.mean(experiment_data['m'][num_burn_in:]): .2f}"
                 )
-                plt.show(block=True)
+                # plt.show(block=True)
             if mode == "series":
                 f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
                 ax1.plot(
@@ -89,7 +80,7 @@ class ExperimentVisualizer:
                     f"Series of samples for data with underlying lambda = {lmb} and m = {m} \n ensemble avgs: lambda = {np.mean(experiment_data['lmb'][num_burn_in:]): .2f}, m = {np.mean(experiment_data['m'][num_burn_in:]): .2f}"
                 )
                 ax1.legend()
-                plt.show(block=True)
+                #plt.show(block=True)
 
         except IOError:
             print(f"Not found: {filename}")
