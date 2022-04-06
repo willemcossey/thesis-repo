@@ -4,6 +4,7 @@ import numpy as np
 from math import sqrt
 import json
 import hashlib
+from scipy.stats.qmc import Sobol, Halton
 
 
 class Dataset:
@@ -35,14 +36,48 @@ class Dataset:
         return len(self.datapoints)
 
     def generate_input(self):
-        inp = np.array(
-            [
-                Uniform(
-                    self.meta["domain_bounds"][i][0], self.meta["domain_bounds"][i][1]
-                ).sample(self.meta["size"])
-                for i in self.meta["domain_bounds"].keys()
-            ]
-        )
+        if self.meta["rng"] == "sobol":
+            gen = Sobol(len(self.meta["domain_bounds"].keys()))
+            points = gen.random(self.size)
+            inp = np.transpose(
+                np.array(
+                    [
+                        points[:, i]
+                        * (
+                            self.meta["domain_bounds"][i][1]
+                            - self.meta["domain_bounds"][i][0]
+                        )
+                        + self.meta["domain_bounds"][i][0]
+                        for i in self.meta["domain_bounds"].keys()
+                    ]
+                )
+            )
+        if self.meta["rng"] == "halton":
+            gen = Halton(len(self.meta["domain_bounds"].keys()))
+            points = gen.random(self.size)
+            inp = np.transpose(
+                np.array(
+                    [
+                        points[:, i]
+                        * (
+                            self.meta["domain_bounds"][i][1]
+                            - self.meta["domain_bounds"][i][0]
+                        )
+                        + self.meta["domain_bounds"][i][0]
+                        for i in self.meta["domain_bounds"].keys()
+                    ]
+                )
+            )
+        else:
+            inp = np.array(
+                [
+                    Uniform(
+                        self.meta["domain_bounds"][i][0],
+                        self.meta["domain_bounds"][i][1],
+                    ).sample(self.meta["size"])
+                    for i in self.meta["domain_bounds"].keys()
+                ]
+            )
         for n in range(self.meta["size"]):
             lmb = float(inp[0, n])
             m = float(inp[1, n])
