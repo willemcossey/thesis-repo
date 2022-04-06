@@ -1,6 +1,7 @@
 import json
 from helper.SimulationJob import SimulationJob
 import numpy as np
+import hashlib
 
 
 class Datapoint:
@@ -9,7 +10,9 @@ class Datapoint:
         self.meta = assumptions_dict
         self.output = output
         if name is None:
-            self.name = hash(tuple(str(sorted(self.meta.items()))))
+            self.name = hashlib.md5(
+                str(sorted(self.meta.items())).encode("utf-8")
+            ).hexdigest()
         else:
             self.name = name
         self.save()

@@ -3,6 +3,7 @@ from helper.Datapoint import Datapoint
 import numpy as np
 from math import sqrt
 import json
+import hashlib
 
 
 class Dataset:
@@ -23,7 +24,9 @@ class Dataset:
             self.generate_input()
         assert len(self.datapoints) == self.meta["size"]
         if name is None:
-            self.name = hash(tuple(str(sorted(self.meta.items()))))
+            self.name = hashlib.md5(
+                str(sorted(self.meta.items())).encode("utf-8")
+            ).hexdigest()
         else:
             self.name = name
         self.save()
