@@ -14,6 +14,14 @@ parser.add_argument(
     "-n", "--nagents", dest="nagents", type=int, default=100, help="number of agents"
 )
 parser.add_argument(
+    "-m",
+    "--mode",
+    dest="rng",
+    type=str,
+    default="random",
+    help="mode of random number generation. 'random' or 'sobol' or 'halton' ",
+)
+parser.add_argument(
     "-r",
     "--rng_seed",
     dest="seed",
@@ -40,10 +48,8 @@ gamma = 0.005
 # size = 200
 
 dset = Dataset(
-    "random",
+    args.rng,
     {"lmb": [0, 12], "m": [-1, 1]},
-    args.size,
-    None,
     dict(
         gamma=gamma,
         theta_bound="lambda g, w: (1 - g) / (1 + abs(w))",
@@ -55,12 +61,13 @@ dset = Dataset(
         lmb_bound=(1 / (3 * gamma) - 2 / 3 + gamma / 3),
         seed=seed,
     ),
+    size=args.size,
 )
 
 dset.compute_output()
 dataset_name = dset.name
 
-print("reconstructing from dataset file")
+print(f"reconstructing from dataset file {dataset_name}.json")
 
 d = Dataset.from_json(f"src\\datasets\\{dset.name}.json")
 d.compute_output()
