@@ -128,16 +128,20 @@ class Dataset:
     def save(self):
         file = open(f"""src\\datasets\\{self.name}.json""", mode="w")
         json.dump(self.to_json(), file, indent=1)
+        file.close()
         pass
 
     def compute_aggregated_output(self, n):
         # Compute the effective 'histogram' of the solution over n equispaced intervals.
         for dp_name in self.datapoints:
-            dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
-            if dp.output is None:
-                dp.compute_output()
-            if "aggregated" not in dp.output:
-                dp.compute_aggregated_output(n)
+            try:
+                dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
+                if dp.output is None:
+                    dp.compute_output()
+                if "aggregated" not in dp.output or len(dp.output["aggregated"]) != n:
+                    dp.compute_aggregated_output(n)
+            except (json.decoder.JSONDecodeError):
+                print(f"Something's wrong with this json file: {dp_name}")
         pass
 
     def to_json(self):
@@ -147,6 +151,7 @@ class Dataset:
     def from_json(filename):
         f = open(filename)
         set = json.load(f)
+        f.close()
         return Dataset(
             set["meta"]["rng"],
             set["meta"]["domain_bounds"],
@@ -156,3 +161,44 @@ class Dataset:
             datapoints=set["datapoints"],
             name=set["name"],
         )
+
+    def get_inputs(self, start=0, end=None):
+        input_dim = None
+        arr = None
+        if end is None:
+            end = self.meta["size"]
+        num_el = end - start
+        for i in range(num_el):
+            dp = Datapoint.from_json(f"""src\\datapoints\\{self.datapoints[start+i]}""")
+            if input_dim is None:
+                input_dim = len(dp.input)
+                arr = np.ones([num_el, input_dim])
+            arr[i, :] = list(dp.input.values())
+        return arr
+
+    def get_outputs(self, start=0, end=None, type="raw"):
+        output_dim = None
+        arr = None
+        if end is None:
+            end = self.meta["size"]
+        num_el = end - start
+        for i in range(num_el):
+            dp = Datapoint.from_json(f"""src\\datapoints\\{self.datapoints[start+i]}""")
+            if output_dim is None:
+                output_dim = len(dp.output[type])
+                num_el = end - start
+                arr = np.ones([num_el, output_dim])
+            arr[i, :] = dp.output[type]
+        return arr
+
+    def is_sane(self):
+        corrupted_list = []
+        for dp_name in self.datapoints:
+            try:
+                dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
+            except (json.decoder.JSONDecodeError):
+                corrupted_list.append(dp_name)
+        if len(corrupted_list) == 0:
+            return True
+        else:
+            return False
