@@ -6,3 +6,5 @@ src/experiment-data/*
 *ipynb_checkpoints*
 src/datapoints/*
 src/datasets/*
+.spyproject/*
+src/raw-archive/*
