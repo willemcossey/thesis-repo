@@ -20,6 +20,7 @@ class Datapoint:
     def save(self):
         file = open(f"""src\\datapoints\\{self.name}.json""", mode="w")
         json.dump(self.to_json(), file, indent=1)
+        file.close()
         pass
 
     def compute_output(self, write=True):
@@ -53,5 +54,12 @@ class Datapoint:
     @staticmethod
     def from_json(filename):
         f = open(filename)
-        point = json.load(f)
-        return Datapoint(point["input"], point["meta"], point["output"], point["name"])
+
+        try:
+            point = json.load(f)
+            f.close()
+            return Datapoint(
+                point["input"], point["meta"], point["output"], point["name"]
+            )
+        except json.decoder.JSONDecodeError:
+            print(f"Corrupted file at following location: {filename}")
