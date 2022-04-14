@@ -5,11 +5,21 @@ from math import sqrt
 import json
 import hashlib
 from scipy.stats.qmc import Sobol, Halton
+from threading import Thread
+from tqdm import tqdm
 
 
 class Dataset:
     def __init__(
-        self, rng, bounds, assumptions, children=None, size=1, datapoints=[], name=None
+        self,
+        rng,
+        bounds,
+        assumptions,
+        children=None,
+        size=1,
+        datapoints=[],
+        name=None,
+        lazy=False,
     ):
         self.meta = {
             "rng": rng,
@@ -19,7 +29,7 @@ class Dataset:
             "experiment_assumptions": assumptions,
         }
         self.datapoints = datapoints
-        if children is not None:
+        if children is not None and not lazy:
             self.import_datasets(children)
         if len(datapoints) == 0:
             self.generate_input()
@@ -126,10 +136,16 @@ class Dataset:
         pass
 
     def save(self):
-        file = open(f"""src\\datasets\\{self.name}.json""", mode="w")
-        json.dump(self.to_json(), file, indent=1)
-        file.flush()
-        file.close()
+        t = Thread(target=self._save)
+        t.start()
+        t.join()
+        pass
+
+    def _save(self):
+        with open(f"""src\\datasets\\{self.name}.json""", mode="w") as file:
+            json.dump(self.to_json(), file, indent=1)
+            file.flush()
+            file.close()
         pass
 
     def compute_aggregated_output(self, n):
@@ -149,8 +165,8 @@ class Dataset:
         return self.__dict__
 
     @staticmethod
-    def from_json(filename):
-        f = open(filename)
+    def from_json(filename, lazy=False):
+        f = open(filename, "r+")
         set = json.load(f)
         f.flush()
         f.close()
@@ -162,15 +178,18 @@ class Dataset:
             children=set["meta"]["children"],
             datapoints=set["datapoints"],
             name=set["name"],
+            lazy=lazy,
         )
 
-    def get_inputs(self, start=0, end=None):
+    def get_inputs(self, start=0, end=None, silent=True):
+        if not silent:
+            print("Loading input data")
         input_dim = None
         arr = None
         if end is None:
             end = self.meta["size"]
         num_el = end - start
-        for i in range(num_el):
+        for i in tqdm(range(num_el), disable=silent):
             dp = Datapoint.from_json(f"""src\\datapoints\\{self.datapoints[start+i]}""")
             if input_dim is None:
                 input_dim = len(dp.input)
@@ -178,13 +197,15 @@ class Dataset:
             arr[i, :] = list(dp.input.values())
         return arr
 
-    def get_outputs(self, start=0, end=None, type="raw"):
+    def get_outputs(self, start=0, end=None, type="raw", silent=True):
+        if not silent:
+            print("Loading output data")
         output_dim = None
         arr = None
         if end is None:
             end = self.meta["size"]
         num_el = end - start
-        for i in range(num_el):
+        for i in tqdm(range(num_el), disable=silent):
             dp = Datapoint.from_json(f"""src\\datapoints\\{self.datapoints[start+i]}""")
             if output_dim is None:
                 output_dim = len(dp.output[type])
