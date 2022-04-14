@@ -2,6 +2,7 @@ import json
 from helper.SimulationJob import SimulationJob
 import numpy as np
 import hashlib
+from threading import Thread
 
 
 class Datapoint:
@@ -18,10 +19,16 @@ class Datapoint:
         self.save()
 
     def save(self):
-        file = open(f"""src\\datapoints\\{self.name}.json""", mode="w")
-        json.dump(self.to_json(), file, indent=1)
-        file.flush()
-        file.close()
+        t = Thread(target=self._save)
+        t.start()
+        t.join()
+        pass
+
+    def _save(self):
+        with open(f"""src\\datapoints\\{self.name}.json""", mode="w") as file:
+            json.dump(self.to_json(), file, indent=1)
+            file.flush()
+            file.close()
         pass
 
     def compute_output(self, write=True):
@@ -54,7 +61,7 @@ class Datapoint:
 
     @staticmethod
     def from_json(filename):
-        f = open(filename)
+        f = open(filename, "r+")
 
         try:
             point = json.load(f)
