@@ -128,6 +128,7 @@ class Dataset:
     def save(self):
         file = open(f"""src\\datasets\\{self.name}.json""", mode="w")
         json.dump(self.to_json(), file, indent=1)
+        file.flush()
         file.close()
         pass
 
@@ -151,6 +152,7 @@ class Dataset:
     def from_json(filename):
         f = open(filename)
         set = json.load(f)
+        f.flush()
         f.close()
         return Dataset(
             set["meta"]["rng"],

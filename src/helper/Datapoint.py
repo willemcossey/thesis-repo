@@ -20,6 +20,7 @@ class Datapoint:
     def save(self):
         file = open(f"""src\\datapoints\\{self.name}.json""", mode="w")
         json.dump(self.to_json(), file, indent=1)
+        file.flush()
         file.close()
         pass
 
@@ -57,6 +58,7 @@ class Datapoint:
 
         try:
             point = json.load(f)
+            f.flush()
             f.close()
             return Datapoint(
                 point["input"], point["meta"], point["output"], point["name"]
