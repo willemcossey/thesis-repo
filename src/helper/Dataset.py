@@ -7,6 +7,7 @@ import hashlib
 from scipy.stats.qmc import Sobol, Halton
 from threading import Thread
 from tqdm import tqdm
+from os.path import exists
 
 
 class Dataset:
@@ -41,6 +42,9 @@ class Dataset:
         else:
             self.name = name
         self.save()
+        if not exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
+            print("doesn't exist in constructor")
+            self.save(ftype="npz")
 
     def get_size(self):
         return len(self.datapoints)
@@ -62,7 +66,7 @@ class Dataset:
                     ]
                 )
             )
-        if self.meta["rng"] == "halton":
+        elif self.meta["rng"] == "halton":
             gen = Halton(len(self.meta["domain_bounds"].keys()))
             points = gen.random(self.size)
             inp = np.transpose(
@@ -78,7 +82,7 @@ class Dataset:
                     ]
                 )
             )
-        else:
+        elif self.meta["rng"] == "random":
             inp = np.array(
                 [
                     Uniform(
@@ -88,6 +92,18 @@ class Dataset:
                     for i in self.meta["domain_bounds"].keys()
                 ]
             )
+        elif self.meta["rng"] == "single":
+            single_input = np.array(
+                [
+                    Uniform(
+                        self.meta["domain_bounds"][i][0],
+                        self.meta["domain_bounds"][i][1],
+                    ).sample(1)
+                    for i in self.meta["domain_bounds"].keys()
+                ]
+                * self.meta["size"]
+            ).reshape(2, -1, order="F")
+
         for n in range(self.meta["size"]):
             lmb = float(inp[0, n])
             m = float(inp[1, n])
@@ -135,18 +151,31 @@ class Dataset:
                 dp.compute_output()
         pass
 
-    def save(self):
-        t = Thread(target=self._save)
+    def save(self, ftype="json"):
+        t = Thread(target=self._save(ftype=ftype))
         t.start()
         t.join()
         pass
 
-    def _save(self):
-        with open(f"""src\\datasets\\{self.name}.json""", mode="w") as file:
-            json.dump(self.to_json(), file, indent=1)
-            file.flush()
-            file.close()
-        pass
+    def _save(self, ftype):
+        if ftype == "json":
+            with open(f"""src\\datasets\\{self.name}.json""", mode="w") as file:
+                json.dump(self.to_json(), file, indent=1)
+                file.flush()
+                file.close()
+                pass
+        elif ftype == "npz":
+            print("save as npz")
+            inputs = self.get_inputs(silent=False)
+            outputs = self.get_outputs(silent=False)
+            np.savez(
+                f"""src\\datasets\\cache\\{self.name}.npz""",
+                inputs=inputs,
+                outputs=outputs,
+            )
+            print("saved npz")
+        else:
+            raise ValueError
 
     def compute_aggregated_output(self, n):
         # Compute the effective 'histogram' of the solution over n equispaced intervals.
@@ -159,7 +188,7 @@ class Dataset:
                     dp.compute_aggregated_output(n)
             except (json.decoder.JSONDecodeError):
                 print(f"Something's wrong with this json file: {dp_name}")
-        pass
+        self.save(ftype="npz")
 
     def to_json(self):
         return self.__dict__
@@ -181,38 +210,46 @@ class Dataset:
             lazy=lazy,
         )
 
-    def get_inputs(self, start=0, end=None, silent=True):
-        if not silent:
-            print("Loading input data")
-        input_dim = None
-        arr = None
-        if end is None:
-            end = self.meta["size"]
-        num_el = end - start
-        for i in tqdm(range(num_el), disable=silent):
-            dp = Datapoint.from_json(f"""src\\datapoints\\{self.datapoints[start+i]}""")
-            if input_dim is None:
-                input_dim = len(dp.input)
-                arr = np.ones([num_el, input_dim])
-            arr[i, :] = list(dp.input.values())
-        return arr
-
-    def get_outputs(self, start=0, end=None, type="raw", silent=True):
-        if not silent:
-            print("Loading output data")
-        output_dim = None
-        arr = None
-        if end is None:
-            end = self.meta["size"]
-        num_el = end - start
-        for i in tqdm(range(num_el), disable=silent):
-            dp = Datapoint.from_json(f"""src\\datapoints\\{self.datapoints[start+i]}""")
-            if output_dim is None:
-                output_dim = len(dp.output[type])
+    def _get_data(self, kind, start=0, end=None, otype="raw", silent=True):
+        if kind in ["in", "out"]:
+            data_dim = None
+            arr = None
+            if end is None:
+                end = self.meta["size"]
+            print("check if exists")
+            if exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
+                print("it exists")
+                with np.load(f"""src\\datasets\\cache\\{self.name}.npz""") as data:
+                    return data[f"{kind}puts"][start:end, :]
+            else:
                 num_el = end - start
-                arr = np.ones([num_el, output_dim])
-            arr[i, :] = dp.output[type]
-        return arr
+                if not silent:
+                    print(f"Loading {kind}put data")
+                for i in tqdm(range(num_el), disable=silent):
+                    dp = Datapoint.from_json(
+                        f"""src\\datapoints\\{self.datapoints[start + i]}"""
+                    )
+                    if data_dim is None:
+                        if kind == "out":
+                            data_dim = len(dp.output[otype])
+                        elif kind == "in":
+                            data_dim = len(dp.input)
+                        else:
+                            raise ValueError
+                        print(data_dim)
+                        arr = np.ones([num_el, data_dim])
+                    if kind == "out":
+                        arr[i, :] = dp.output[otype]
+                    elif kind == "in":
+                        arr[i, :] = list(dp.input.values())
+                return arr
+
+    def get_inputs(self, start=0, end=None, silent=True):
+        print("doing inputs")
+        return self._get_data("in", start=start, end=end, silent=silent)
+
+    def get_outputs(self, start=0, end=None, otype="aggregated", silent=True):
+        return self._get_data("out", start=start, end=end, otype=otype, silent=silent)
 
     def is_sane(self):
         corrupted_list = []
