@@ -149,7 +149,7 @@ class Dataset:
             dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
             if (dp.output is None) or (dp.output["raw"] is None):
                 dp.compute_output()
-        self.save(ftype="npz",lazy=False)
+        self.save(ftype="npz", lazy=False)
 
     def save(self, ftype="json"):
         t = Thread(target=self._save(ftype=ftype))
@@ -243,12 +243,16 @@ class Dataset:
                         arr[i, :] = list(dp.input.values())
                 return arr
 
-    def get_inputs(self, start=0, end=None, silent=True,lazy=True):
+    def get_inputs(self, start=0, end=None, silent=True, lazy=True):
         print("doing inputs")
         return self._get_data("in", start=start, end=end, silent=silent, lazy=lazy)
 
-    def get_outputs(self, start=0, end=None, otype="aggregated", silent=True, lazy=True):
-        return self._get_data("out", start=start, end=end, otype=otype, silent=silent, lazy=lazy)
+    def get_outputs(
+        self, start=0, end=None, otype="aggregated", silent=True, lazy=True
+    ):
+        return self._get_data(
+            "out", start=start, end=end, otype=otype, silent=silent, lazy=lazy
+        )
 
     def is_sane(self):
         corrupted_list = []
