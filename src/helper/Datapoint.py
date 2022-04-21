@@ -51,9 +51,10 @@ class Datapoint:
         pass
 
     def compute_aggregated_output(self, n):
-        h = 2/n
+        h = 2 / n
         self.output["aggregated"] = list(
-            np.histogram(self.output["raw"], n, range=[-1, 1], density=True)[0]*h)
+            np.histogram(self.output["raw"], n, range=[-1, 1], density=True)[0] * h
+        )
         self.save()
         pass
 
