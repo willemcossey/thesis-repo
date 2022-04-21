@@ -26,7 +26,7 @@ class Datapoint:
 
     def _save(self):
         jstr = self.to_json()
-        with open(f"""src\\datapoints\\{self.name}.json""", mode="w") as file:
+        with open(f"""src/datapoints/{self.name}.json""", mode="w") as file:
             json.dump(jstr, file, indent=1)
             file.flush()
             file.close()
