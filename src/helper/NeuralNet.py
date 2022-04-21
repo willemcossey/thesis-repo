@@ -5,8 +5,6 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader
 import numpy as np
-from math import floor, ceil
-
 
 # Based on code provided for the course "Deep Learning and Scientific Computing" at ETH Spring Semester 2022.
 # Thanks to Roberto Molinaro for this part of the code.
@@ -208,23 +206,18 @@ class NeuralNet(nn.Module):
         activation = conf_dict["activation"]
 
         # define size of test,training and validation data
-        test_ratio = 0.1
-        val_ratio = 0.1
-        train_ratio = 0.8
-        assert test_ratio + val_ratio + train_ratio == 1
+        test_size = 10
+        val_size = 10
+        train_size = 80
+        assert test_size + val_size + train_size == 100
 
-        validation_size = ceil(val_ratio * x_.shape[0])
-        training_size = floor(train_ratio * x_.shape[0])
-        test_size = x_.shape[0] - validation_size - training_size
-
+        validation_size = int(val_size * x_.shape[0] / 100)
+        training_size = x_.shape[0] - validation_size
         x_train = x_[:training_size, :]
         y_train = y_[:training_size, :]
 
-        x_val = x_[training_size + 1 : training_size + validation_size, :]
-        y_val = y_[training_size + 1 : training_size + validation_size, :]
-
-        x_test = x_[training_size + validation_size :, :]
-        y_test = y_[training_size + validation_size :, :]
+        x_val = x_[training_size:, :]
+        y_val = y_[training_size:, :]
 
         training_set = DataLoader(
             torch.utils.data.TensorDataset(x_train, y_train),
@@ -233,8 +226,8 @@ class NeuralNet(nn.Module):
         )
 
         my_network = NeuralNet(
-            input_dimension=x_train.shape[1],
-            output_dimension=y_train.shape[1],
+            input_dimension=x.shape[1],
+            output_dimension=y.shape[1],
             n_hidden_layers=n_hidden_layers,
             neurons=neurons,
             regularization_param=regularization_param,
@@ -267,7 +260,8 @@ class NeuralNet(nn.Module):
             verbose=False,
         )
 
-        y_test = y_test.reshape(
+        x_test = torch.linspace(0, 2 * np.pi, 10000).reshape(-1, 1)
+        y_test = exact_solution(x_test).reshape(
             -1,
         )
         y_val = y_val.reshape(
@@ -289,7 +283,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative validation error
         relative_error_train = torch.mean((y_train_pred - y_train) ** 2) / torch.mean(
-            y_train ** 2
+            y_train**2
         )
         print(
             "Relative Training Error: ",
@@ -299,7 +293,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative validation error
         relative_error_val = torch.mean((y_val_pred - y_val) ** 2) / torch.mean(
-            y_val ** 2
+            y_val**2
         )
         print(
             "Relative Validation Error: ",
@@ -309,7 +303,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative L2 error norm (generalization error)
         relative_error_test = torch.mean((y_test_pred - y_test) ** 2) / torch.mean(
-            y_test ** 2
+            y_test**2
         )
         print(
             "Relative Testing Error: ",

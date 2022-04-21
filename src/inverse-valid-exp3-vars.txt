@@ -1,0 +1,13 @@
+FILE,TRUE_LAMBDA,TRUE_MEAN,OBSERVATIONS,NOISE_LEVEL,N_SAMPLES,BURN_IN,PROPOSAL,T_HORIZ,N_AGENTS
+synth-data-lmb-2.0-m-0.5-t_horiz-200-nagents-10000.npy,2,0.5,100,0.1,600,300,0.01,100,1000
+synth-data-lmb-2.0-m-0.0-t_horiz-200-nagents-10000.npy,2,0,100,0.1,600,300,0.01,100,1000
+synth-data-lmb-0.1-m-0.5-t_horiz-200-nagents-10000.npy,0.1,0.5,100,0.1,600,300,0.01,100,1000
+synth-data-lmb-0.1-m-0.0-t_horiz-200-nagents-10000.npy,0.1,0,100,0.1,600,300,0.01,100,1000
+synth-data-lmb-2.0-m-0.5-t_horiz-200-nagents-10000.npy,2,0.5,100,0.1,600,300,0.05,100,1000
+synth-data-lmb-2.0-m-0.0-t_horiz-200-nagents-10000.npy,2,0,100,0.1,600,300,0.05,100,1000
+synth-data-lmb-0.1-m-0.5-t_horiz-200-nagents-10000.npy,0.1,0.5,100,0.1,600,300,0.05,100,1000
+synth-data-lmb-0.1-m-0.0-t_horiz-200-nagents-10000.npy,0.1,0,100,0.1,600,300,0.05,100,1000
+synth-data-lmb-2.0-m-0.5-t_horiz-200-nagents-10000.npy,2,0.5,100,0.1,600,300,0.1,100,1000
+synth-data-lmb-2.0-m-0.0-t_horiz-200-nagents-10000.npy,2,0,100,0.1,600,300,0.1,100,1000
+synth-data-lmb-0.1-m-0.5-t_horiz-200-nagents-10000.npy,0.1,0.5,100,0.1,600,300,0.1,100,1000
+synth-data-lmb-0.1-m-0.0-t_horiz-200-nagents-10000.npy,0.1,0,100,0.1,600,300,0.1,100,1000
