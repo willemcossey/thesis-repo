@@ -8,7 +8,8 @@ import winsound
 
 # import dataset
 
-data = Dataset.from_json("src/datasets/7d0ca7a38db3c6cf84efa7bfa36e8a7e.json", lazy=True
+data = Dataset.from_json(
+    "src/datasets/7d0ca7a38db3c6cf84efa7bfa36e8a7e.json", lazy=True
 )
 n_samples = 1000
 #%%
