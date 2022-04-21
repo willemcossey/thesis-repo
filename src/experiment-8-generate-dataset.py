@@ -19,7 +19,7 @@ parser.add_argument(
     dest="rng",
     type=str,
     default="random",
-    help="mode of random number generation. 'random' or 'sobol' or 'halton' ",
+    help="mode of random number generation. 'random' or 'sobol' or 'halton' or 'identical'",
 )
 parser.add_argument(
     "-r",

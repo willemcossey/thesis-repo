@@ -149,7 +149,7 @@ class Dataset:
             dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
             if (dp.output is None) or (dp.output["raw"] is None):
                 dp.compute_output()
-        pass
+        self.save(ftype="npz",lazy=False)
 
     def save(self, ftype="json"):
         t = Thread(target=self._save(ftype=ftype))
@@ -167,7 +167,7 @@ class Dataset:
         elif ftype == "npz":
             print("save as npz")
             inputs = self.get_inputs(silent=False)
-            outputs = self.get_outputs(silent=False)
+            outputs = self.get_outputs(silent=False, lazy=False)
             np.savez(
                 f"""src\\datasets\\cache\\{self.name}.npz""",
                 inputs=inputs,
@@ -179,13 +179,12 @@ class Dataset:
 
     def compute_aggregated_output(self, n):
         # Compute the effective 'histogram' of the solution over n equispaced intervals.
-        for dp_name in self.datapoints:
+        for dp_name in tqdm(self.datapoints):
             try:
                 dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
                 if dp.output is None:
                     dp.compute_output()
-                if "aggregated" not in dp.output or len(dp.output["aggregated"]) != n:
-                    dp.compute_aggregated_output(n)
+                dp.compute_aggregated_output(n)
             except (json.decoder.JSONDecodeError):
                 print(f"Something's wrong with this json file: {dp_name}")
         self.save(ftype="npz")
@@ -210,14 +209,14 @@ class Dataset:
             lazy=lazy,
         )
 
-    def _get_data(self, kind, start=0, end=None, otype="raw", silent=True):
+    def _get_data(self, kind, start=0, end=None, otype="raw", silent=True, lazy=True):
         if kind in ["in", "out"]:
             data_dim = None
             arr = None
             if end is None:
                 end = self.meta["size"]
             print("check if exists")
-            if exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
+            if lazy and exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
                 print("it exists")
                 with np.load(f"""src\\datasets\\cache\\{self.name}.npz""") as data:
                     return data[f"{kind}puts"][start:end, :]
@@ -244,12 +243,12 @@ class Dataset:
                         arr[i, :] = list(dp.input.values())
                 return arr
 
-    def get_inputs(self, start=0, end=None, silent=True):
+    def get_inputs(self, start=0, end=None, silent=True,lazy=True):
         print("doing inputs")
-        return self._get_data("in", start=start, end=end, silent=silent)
+        return self._get_data("in", start=start, end=end, silent=silent, lazy=lazy)
 
-    def get_outputs(self, start=0, end=None, otype="aggregated", silent=True):
-        return self._get_data("out", start=start, end=end, otype=otype, silent=silent)
+    def get_outputs(self, start=0, end=None, otype="aggregated", silent=True, lazy=True):
+        return self._get_data("out", start=start, end=end, otype=otype, silent=silent, lazy=lazy)
 
     def is_sane(self):
         corrupted_list = []
