@@ -2,6 +2,7 @@ import json
 from helper.SimulationJob import SimulationJob
 import numpy as np
 import hashlib
+from threading import Thread
 
 
 class Datapoint:
@@ -62,6 +63,14 @@ class Datapoint:
 
     @staticmethod
     def from_json(filename):
-        f = open(filename)
-        point = json.load(f)
-        return Datapoint(point["input"], point["meta"], point["output"], point["name"])
+        f = open(filename, "r+")
+
+        try:
+            point = json.load(f)
+            f.flush()
+            f.close()
+            return Datapoint(
+                point["input"], point["meta"], point["output"], point["name"]
+            )
+        except json.decoder.JSONDecodeError:
+            print(f"Corrupted file at following location: {filename}")
