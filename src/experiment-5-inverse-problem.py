@@ -2,8 +2,7 @@ import numpy as np
 import os.path
 from helper.Distribution import Normal, Uniform
 from helper.InverseProblem import InverseProblem
-
-# from helper.ExperimentVisualizer import ExperimentVisualizer
+from helper.ExperimentVisualizer import ExperimentVisualizer
 import time
 import argparse
 import random
@@ -79,7 +78,7 @@ parser.add_argument("--show", action="store_true")
 args = parser.parse_args()
 
 if args.seed is None:
-    seed = random.randint(1, 2**32 - 1)
+    seed = random.randint(1, 2 ** 32 - 1)
 else:
     seed = args.seed
 
@@ -94,7 +93,7 @@ experiment_assumptions = dict(
     gamma=gamma,
     lmb_bound=(1 / (3 * gamma) - 2 / 3 + gamma / 3),
     p=lambda w: 1,
-    d=lambda w: (1 - w**2),
+    d=lambda w: (1 - w ** 2),
     t_horiz=args.t_horiz,
     nagents=args.nagents,
 )
@@ -140,6 +139,11 @@ np.savez(output_file, lmb=samples["lmb"], m=samples["m"])
 
 
 # plot results
-# if args.show:
-#     ExperimentVisualizer.from_samples_file(
-#         output_file + ".npz", solver_settings["num_burn_in"], underlyng_lmb, underlying_m, mode='series')
+if args.show:
+    ExperimentVisualizer.from_samples_file(
+        output_file + ".npz",
+        solver_settings["num_burn_in"],
+        underlyng_lmb,
+        underlying_m,
+        mode="series",
+    )

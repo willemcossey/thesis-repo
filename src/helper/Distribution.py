@@ -10,7 +10,7 @@ class Distribution(ABC):
         pass
 
     @abstractmethod
-    def sample(self, amount: int = 1):
+    def sample(self, amount: int = 1) -> list[float]:
         pass
 
 
@@ -21,7 +21,7 @@ class Uniform(Distribution):
         self.lower = lower
         self.upper = upper
 
-    def sample(self, amount: int = 1):
+    def sample(self, amount: int = 1) -> list[float]:
         return list(np.random.uniform(self.lower, self.upper, amount))
 
     def evaluate(self, p):
@@ -40,7 +40,7 @@ class Normal(Distribution):
         self.mean = mean
         self.std = std
 
-    def sample(self, amount: int = 1):
+    def sample(self, amount: int = 1) -> list[float]:
         return np.random.normal(self.mean, self.std, (1, amount)).tolist()[0]
 
 
@@ -59,7 +59,7 @@ class TruncatedNormal(Distribution):
         self.std = std
         self.bounds = bounds
 
-    def sample(self, amount: int = 1):
+    def sample(self, amount: int = 1) -> list[float]:
         a = (self.bounds[0] - self.mean) / self.std * np.ones([amount, 1])
         b = (self.bounds[1] - self.mean) / self.std * np.ones([amount, 1])
         loc = self.mean * np.ones([amount, 1]) * self.std
