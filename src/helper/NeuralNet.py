@@ -1,11 +1,11 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.utils
-import torch.utils.data
+from torch import nn, optim, utils
 from torch.utils.data import DataLoader
 import numpy as np
 from math import floor, ceil
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+from matplotlib import markers
 
 
 # Based on code provided for the course "Deep Learning and Scientific Computing" at ETH Spring Semester 2022.
@@ -26,6 +26,7 @@ class NeuralNet(nn.Module):
         regularization_exp,
         retrain_seed,
         activation_name,
+        add_sftmax_layer,
     ):
 
         super(NeuralNet, self).__init__()
@@ -40,6 +41,8 @@ class NeuralNet(nn.Module):
         # Activation function
         self.activation_name = activation_name
         self.activation = self.get_activation(activation_name)
+        # Parameter denoting whether to add Sftmax regularization
+        self.add_sftmax_layer = add_sftmax_layer
         # Regularization parameter
         self.regularization_param = regularization_param
         # Regularization exponent
@@ -56,6 +59,10 @@ class NeuralNet(nn.Module):
                 ]
             )
             self.output_layer = nn.Linear(self.neurons, self.output_dimension)
+            if self.add_sftmax_layer:
+                print("Using Softmax")
+                self.sftmax_layer = nn.Softmax(0)
+                # self.sftmax_layer = nn.Linear(self.neurons,self.output_dimension)
 
         else:
             print("Simple linear regression")
@@ -74,7 +81,7 @@ class NeuralNet(nn.Module):
                     gain = nn.init.calculate_gain(self.activation_name)
                 else:
                     gain = 1
-                torch.nn.init.xavier_uniform_(m.weight, gain=gain)
+                nn.init.xavier_uniform_(m.weight, gain=gain)
                 m.bias.data.fill_(0)
 
         self.apply(init_weights)
@@ -86,7 +93,8 @@ class NeuralNet(nn.Module):
                 reg_loss = reg_loss + torch.norm(param, self.regularization_exp)
         return reg_loss
 
-    def get_activation(self, activation_name):
+    @staticmethod
+    def get_activation(activation_name):
         if activation_name in ["tanh"]:
             return nn.Tanh()
         elif activation_name in ["relu"]:
@@ -109,7 +117,11 @@ class NeuralNet(nn.Module):
             x = self.activation(self.input_layer(x))
             for k, l in enumerate(self.hidden_layers):
                 x = self.activation(l(x))
-            return self.output_layer(x)
+            if self.add_sftmax_layer:
+                x = self.output_layer(x)
+                return self.sftmax_layer(x)
+            else:
+                return self.output_layer(x)
         else:
             return self.linear_regression_layer(x)
 
@@ -128,7 +140,7 @@ class NeuralNet(nn.Module):
         regularization_param = model.regularization_param
 
         # Loop over epochs
-        for epoch in range(num_epochs):
+        for epoch in tqdm(range(num_epochs)):
             if verbose:
                 print(
                     "################################ ",
@@ -189,10 +201,8 @@ class NeuralNet(nn.Module):
         print("Final Validation Loss: ", np.round(history[1][-1], 8))
         return history
 
-    def train_single_configuration(conf_dict, x_, y_):
-        # Set random seed for reproducibility
-        torch.manual_seed(42)
-        np.random.seed(42)
+    @staticmethod
+    def train_single_configuration(conf_dict, x_, y_, visual_check=False):
 
         print(conf_dict)
 
@@ -206,12 +216,17 @@ class NeuralNet(nn.Module):
         retrain_seed = conf_dict["init_weight_seed"]
         batch_size = conf_dict["batch_size"]
         activation = conf_dict["activation"]
+        add_sftmax_layer = conf_dict["add_sftmax_layer"]
+
+        # Set random seed for reproducibility
+        torch.manual_seed(retrain_seed)
+        np.random.seed(retrain_seed)
 
         # define size of test,training and validation data
-        test_ratio = 0.1
-        val_ratio = 0.1
-        train_ratio = 0.8
-        assert test_ratio + val_ratio + train_ratio == 1
+        test_ratio = 0.2
+        val_ratio = 0.16
+        train_ratio = 0.64
+        assert np.equal(test_ratio + val_ratio + train_ratio, 1.0)
 
         validation_size = ceil(val_ratio * x_.shape[0])
         training_size = floor(train_ratio * x_.shape[0])
@@ -226,8 +241,8 @@ class NeuralNet(nn.Module):
         x_test = x_[training_size + validation_size :, :]
         y_test = y_[training_size + validation_size :, :]
 
-        training_set = DataLoader(
-            torch.utils.data.TensorDataset(x_train, y_train),
+        training_set = utils.data.DataLoader(
+            utils.data.TensorDataset(x_train, y_train),
             batch_size=batch_size,
             shuffle=True,
         )
@@ -241,10 +256,11 @@ class NeuralNet(nn.Module):
             regularization_exp=regularization_exp,
             retrain_seed=retrain_seed,
             activation_name=activation,
+            add_sftmax_layer=add_sftmax_layer,
         )
 
         if opt_type == "ADAM":
-            optimizer_ = optim.Adam(my_network.parameters(), lr=0.001)
+            optimizer_ = torch.optim.Adam(my_network.parameters(), lr=0.001)
         elif opt_type == "LBFGS":
             optimizer_ = optim.LBFGS(
                 my_network.parameters(),
@@ -276,20 +292,49 @@ class NeuralNet(nn.Module):
         y_train = y_train.reshape(
             -1,
         )
+        y_test_pred = my_network(x_test)
+        y_val_pred = my_network(x_val)
+        y_train_pred = my_network(x_train)
+        # raise ValueError
+        y_train_pred = y_train_pred.reshape(
+            -1,
+        )
+        y_test_pred = y_test_pred.reshape(
+            -1,
+        )
+        y_val_pred = y_val_pred.reshape(
+            -1,
+        )
 
-        y_test_pred = my_network(x_test).reshape(
-            -1,
-        )
-        y_val_pred = my_network(x_val).reshape(
-            -1,
-        )
-        y_train_pred = my_network(x_train).reshape(
-            -1,
-        )
+        if visual_check:
+            plt.figure()
+            n_examples = 3
+            output_size = 20
+            for i in np.random.choice(
+                range(1, (len(y_test) // output_size) + 1),
+                size=min(n_examples, len(y_test) // output_size),
+            ):
+                color = tuple(np.random.choice(range(256), size=3) / 256)
+                plt.scatter(
+                    np.linspace(-1, 1, output_size),
+                    y_test[(i - 1) * output_size : i * output_size],
+                    color=color,
+                    marker=markers.MarkerStyle(marker="o", fillstyle="none"),
+                )
+                plt.scatter(
+                    np.linspace(-1, 1, output_size),
+                    y_test_pred.detach().numpy()[
+                        (i - 1) * output_size : i * output_size
+                    ],
+                    color=color,
+                    marker="x",
+                )
+                print(y_test[(i - 1) * output_size : i * output_size])
+            plt.show(block=True)
 
         # Compute the relative validation error
         relative_error_train = torch.mean((y_train_pred - y_train) ** 2) / torch.mean(
-            y_train ** 2
+            y_train**2
         )
         print(
             "Relative Training Error: ",
@@ -299,7 +344,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative validation error
         relative_error_val = torch.mean((y_val_pred - y_val) ** 2) / torch.mean(
-            y_val ** 2
+            y_val**2
         )
         print(
             "Relative Validation Error: ",
@@ -309,7 +354,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative L2 error norm (generalization error)
         relative_error_test = torch.mean((y_test_pred - y_test) ** 2) / torch.mean(
-            y_test ** 2
+            y_test**2
         )
         print(
             "Relative Testing Error: ",
