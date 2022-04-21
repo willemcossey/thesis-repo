@@ -4,13 +4,23 @@ import numpy as np
 from math import sqrt
 import json
 import hashlib
-
-# from scipy.stats.qmc import Sobol, Halton
+from scipy.stats.qmc import Sobol, Halton
+from threading import Thread
+from tqdm import tqdm
+from os.path import exists
 
 
 class Dataset:
     def __init__(
-        self, rng, bounds, assumptions, children=None, size=1, datapoints=[], name=None
+        self,
+        rng,
+        bounds,
+        assumptions,
+        children=None,
+        size=1,
+        datapoints=[],
+        name=None,
+        lazy=False,
     ):
         self.meta = {
             "rng": rng,
@@ -20,7 +30,7 @@ class Dataset:
             "experiment_assumptions": assumptions,
         }
         self.datapoints = datapoints
-        if children is not None:
+        if children is not None and not lazy:
             self.import_datasets(children)
         if len(datapoints) == 0:
             self.generate_input()
@@ -32,53 +42,68 @@ class Dataset:
         else:
             self.name = name
         self.save()
+        if not exists(f"""./src\\datasets\\cache\\{self.name}.npz"""):
+            print("doesn't exist in constructor")
+            self.save(ftype="npz")
 
     def get_size(self):
         return len(self.datapoints)
 
     def generate_input(self):
-        # if self.meta["rng"] == "sobol":
-        #     gen = Sobol(len(self.meta["domain_bounds"].keys()))
-        #     points = gen.random(self.size)
-        #     inp = np.transpose(
-        #         np.array(
-        #             [
-        #                 points[:, i]
-        #                 * (
-        #                     self.meta["domain_bounds"][i][1]
-        #                     - self.meta["domain_bounds"][i][0]
-        #                 )
-        #                 + self.meta["domain_bounds"][i][0]
-        #                 for i in self.meta["domain_bounds"].keys()
-        #             ]
-        #         )
-        #     )
-        # if self.meta["rng"] == "halton":
-        #     gen = Halton(len(self.meta["domain_bounds"].keys()))
-        #     points = gen.random(self.size)
-        #     inp = np.transpose(
-        #         np.array(
-        #             [
-        #                 points[:, i]
-        #                 * (
-        #                     self.meta["domain_bounds"][i][1]
-        #                     - self.meta["domain_bounds"][i][0]
-        #                 )
-        #                 + self.meta["domain_bounds"][i][0]
-        #                 for i in self.meta["domain_bounds"].keys()
-        #             ]
-        #         )
-        #     )
-        # else:
-        inp = np.array(
-            [
-                Uniform(
-                    self.meta["domain_bounds"][i][0],
-                    self.meta["domain_bounds"][i][1],
-                ).sample(self.meta["size"])
-                for i in self.meta["domain_bounds"].keys()
-            ]
-        )
+        if self.meta["rng"] == "sobol":
+            gen = Sobol(len(self.meta["domain_bounds"].keys()))
+            points = gen.random(self.size)
+            inp = np.transpose(
+                np.array(
+                    [
+                        points[:, i]
+                        * (
+                            self.meta["domain_bounds"][i][1]
+                            - self.meta["domain_bounds"][i][0]
+                        )
+                        + self.meta["domain_bounds"][i][0]
+                        for i in self.meta["domain_bounds"].keys()
+                    ]
+                )
+            )
+        elif self.meta["rng"] == "halton":
+            gen = Halton(len(self.meta["domain_bounds"].keys()))
+            points = gen.random(self.size)
+            inp = np.transpose(
+                np.array(
+                    [
+                        points[:, i]
+                        * (
+                            self.meta["domain_bounds"][i][1]
+                            - self.meta["domain_bounds"][i][0]
+                        )
+                        + self.meta["domain_bounds"][i][0]
+                        for i in self.meta["domain_bounds"].keys()
+                    ]
+                )
+            )
+        elif self.meta["rng"] == "random":
+            inp = np.array(
+                [
+                    Uniform(
+                        self.meta["domain_bounds"][i][0],
+                        self.meta["domain_bounds"][i][1],
+                    ).sample(self.meta["size"])
+                    for i in self.meta["domain_bounds"].keys()
+                ]
+            )
+        elif self.meta["rng"] == "single":
+            single_input = np.array(
+                [
+                    Uniform(
+                        self.meta["domain_bounds"][i][0],
+                        self.meta["domain_bounds"][i][1],
+                    ).sample(1)
+                    for i in self.meta["domain_bounds"].keys()
+                ]
+                * self.meta["size"]
+            ).reshape(2, -1, order="F")
+
         for n in range(self.meta["size"]):
             lmb = float(inp[0, n])
             m = float(inp[1, n])
@@ -124,30 +149,55 @@ class Dataset:
             dp = Datapoint.from_json(f"""./src/datapoints/{dp_name}""")
             if (dp.output is None) or (dp.output["raw"] is None):
                 dp.compute_output()
+        self.save(ftype="npz", lazy=False)
+
+    def save(self, ftype="json"):
+        t = Thread(target=self._save(ftype=ftype))
+        t.start()
+        t.join()
         pass
 
-    def save(self):
-        file = open(f"""./src/datasets/{self.name}.json""", mode="w")
-        json.dump(self.to_json(), file, indent=1)
-        pass
+    def _save(self, ftype):
+        if ftype == "json":
+            with open(f"""./src/datasets/{self.name}.json""", mode="w") as file:
+                json.dump(self.to_json(), file, indent=1)
+                file.flush()
+                file.close()
+                pass
+        elif ftype == "npz":
+            print("save as npz")
+            inputs = self.get_inputs(silent=False)
+            outputs = self.get_outputs(silent=False, lazy=False)
+            np.savez(
+                f"""./src/datasets/cache/{self.name}.npz""",
+                inputs=inputs,
+                outputs=outputs,
+            )
+            print("saved npz")
+        else:
+            raise ValueError
 
     def compute_aggregated_output(self, n):
         # Compute the effective 'histogram' of the solution over n equispaced intervals.
-        for dp_name in self.datapoints:
-            dp = Datapoint.from_json(f"""./src/datapoints/{dp_name}""")
-            if dp.output is None:
-                dp.compute_output()
-            if "aggregated" not in dp.output:
+        for dp_name in tqdm(self.datapoints):
+            try:
+                dp = Datapoint.from_json(f"""./src/datapoints/{dp_name}""")
+                if dp.output is None:
+                    dp.compute_output()
                 dp.compute_aggregated_output(n)
-        pass
+            except (json.decoder.JSONDecodeError):
+                print(f"Something's wrong with this json file: {dp_name}")
+        self.save(ftype="npz")
 
     def to_json(self):
         return self.__dict__
 
     @staticmethod
-    def from_json(filename):
-        f = open(filename)
+    def from_json(filename, lazy=False):
+        f = open(filename, "r+")
         set = json.load(f)
+        f.flush()
+        f.close()
         return Dataset(
             set["meta"]["rng"],
             set["meta"]["domain_bounds"],
@@ -156,4 +206,62 @@ class Dataset:
             children=set["meta"]["children"],
             datapoints=set["datapoints"],
             name=set["name"],
+            lazy=lazy,
         )
+
+    def _get_data(self, kind, start=0, end=None, otype="raw", silent=True, lazy=True):
+        if kind in ["in", "out"]:
+            data_dim = None
+            arr = None
+            if end is None:
+                end = self.meta["size"]
+            print("check if exists")
+            if lazy and exists(f"""./src/datasets/cache/{self.name}.npz"""):
+                print("it exists")
+                with np.load(f"""./src/datasets/cache/{self.name}.npz""") as data:
+                    return data[f"{kind}puts"][start:end, :]
+            else:
+                num_el = end - start
+                if not silent:
+                    print(f"Loading {kind}put data")
+                for i in tqdm(range(num_el), disable=silent):
+                    dp = Datapoint.from_json(
+                        f"""./src/datapoints/{self.datapoints[start + i]}"""
+                    )
+                    if data_dim is None:
+                        if kind == "out":
+                            data_dim = len(dp.output[otype])
+                        elif kind == "in":
+                            data_dim = len(dp.input)
+                        else:
+                            raise ValueError
+                        print(data_dim)
+                        arr = np.ones([num_el, data_dim])
+                    if kind == "out":
+                        arr[i, :] = dp.output[otype]
+                    elif kind == "in":
+                        arr[i, :] = list(dp.input.values())
+                return arr
+
+    def get_inputs(self, start=0, end=None, silent=True, lazy=True):
+        print("doing inputs")
+        return self._get_data("in", start=start, end=end, silent=silent, lazy=lazy)
+
+    def get_outputs(
+        self, start=0, end=None, otype="aggregated", silent=True, lazy=True
+    ):
+        return self._get_data(
+            "out", start=start, end=end, otype=otype, silent=silent, lazy=lazy
+        )
+
+    def is_sane(self):
+        corrupted_list = []
+        for dp_name in self.datapoints:
+            try:
+                dp = Datapoint.from_json(f"""./src/datapoints/{dp_name}""")
+            except (json.decoder.JSONDecodeError):
+                corrupted_list.append(dp_name)
+        if len(corrupted_list) == 0:
+            return True
+        else:
+            return False
