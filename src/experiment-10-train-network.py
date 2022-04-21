@@ -7,7 +7,7 @@ from src.helper.Dataset import Dataset
 
 # import dataset
 
-data = Dataset.from_json("src\\datasets\\7d0ca7a38db3c6cf84efa7bfa36e8a7e.json")
+data = Dataset.from_json("src/datasets/7d0ca7a38db3c6cf84efa7bfa36e8a7e.json")
 
 n_samples = 1000
 
