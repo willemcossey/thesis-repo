@@ -2,6 +2,7 @@ import json
 from helper.SimulationJob import SimulationJob
 import numpy as np
 import hashlib
+from threading import Thread
 
 
 class Datapoint:
@@ -18,8 +19,17 @@ class Datapoint:
         self.save()
 
     def save(self):
-        file = open(f"""src/datapoints/{self.name}.json""", mode="w")
-        json.dump(self.to_json(), file, indent=1)
+        t = Thread(target=self._save)
+        t.start()
+        t.join()
+        pass
+
+    def _save(self):
+        jstr = self.to_json()
+        with open(f"""src\\datapoints\\{self.name}.json""", mode="w") as file:
+            json.dump(jstr, file, indent=1)
+            file.flush()
+            file.close()
         pass
 
     def compute_output(self, write=True):
@@ -41,8 +51,9 @@ class Datapoint:
         pass
 
     def compute_aggregated_output(self, n):
+        h = 2 / n
         self.output["aggregated"] = list(
-            np.histogram(self.output["raw"], n, range=[-1, 1], density=True)[0]
+            np.histogram(self.output["raw"], n, range=[-1, 1], density=True)[0] * h
         )
         self.save()
         pass
@@ -52,6 +63,14 @@ class Datapoint:
 
     @staticmethod
     def from_json(filename):
-        f = open(filename)
-        point = json.load(f)
-        return Datapoint(point["input"], point["meta"], point["output"], point["name"])
+        f = open(filename, "r+")
+
+        try:
+            point = json.load(f)
+            f.flush()
+            f.close()
+            return Datapoint(
+                point["input"], point["meta"], point["output"], point["name"]
+            )
+        except json.decoder.JSONDecodeError:
+            print(f"Corrupted file at following location: {filename}")
