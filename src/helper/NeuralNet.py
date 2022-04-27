@@ -334,7 +334,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative validation error
         relative_error_train = torch.mean((y_train_pred - y_train) ** 2) / torch.mean(
-            y_train ** 2
+            y_train**2
         )
         print(
             "Relative Training Error: ",
@@ -344,7 +344,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative validation error
         relative_error_val = torch.mean((y_val_pred - y_val) ** 2) / torch.mean(
-            y_val ** 2
+            y_val**2
         )
         print(
             "Relative Validation Error: ",
@@ -354,7 +354,7 @@ class NeuralNet(nn.Module):
 
         # Compute the relative L2 error norm (generalization error)
         relative_error_test = torch.mean((y_test_pred - y_test) ** 2) / torch.mean(
-            y_test ** 2
+            y_test**2
         )
         print(
             "Relative Testing Error: ",

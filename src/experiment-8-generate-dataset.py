@@ -33,7 +33,7 @@ parser.add_argument("--show", action="store_true")
 args = parser.parse_args()
 
 if args.seed is None:
-    seed = random.randint(1, 2 ** 32 - 1)
+    seed = random.randint(1, 2**32 - 1)
 else:
     seed = args.seed
 
