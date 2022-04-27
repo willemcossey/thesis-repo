@@ -43,7 +43,6 @@ class Dataset:
             self.name = name
         self.save()
         if not exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
-            print("doesn't exist in constructor")
             self.save(ftype="npz")
 
     def get_size(self):
@@ -165,7 +164,6 @@ class Dataset:
                 file.close()
                 pass
         elif ftype == "npz":
-            print("save as npz")
             inputs = self.get_inputs(silent=False)
             outputs = self.get_outputs(silent=False, lazy=False)
             np.savez(
@@ -173,7 +171,6 @@ class Dataset:
                 inputs=inputs,
                 outputs=outputs,
             )
-            print("saved npz")
         else:
             raise ValueError
 
@@ -215,36 +212,31 @@ class Dataset:
             arr = None
             if end is None:
                 end = self.meta["size"]
-            print("check if exists")
             if lazy and exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
-                print("it exists")
                 with np.load(f"""src\\datasets\\cache\\{self.name}.npz""") as data:
                     return data[f"{kind}puts"][start:end, :]
             else:
                 num_el = end - start
                 if not silent:
-                    print(f"Loading {kind}put data")
-                for i in tqdm(range(num_el), disable=silent):
-                    dp = Datapoint.from_json(
-                        f"""src\\datapoints\\{self.datapoints[start + i]}"""
-                    )
-                    if data_dim is None:
+                    for i in tqdm(range(num_el), disable=silent):
+                        dp = Datapoint.from_json(
+                            f"""src\\datapoints\\{self.datapoints[start + i]}"""
+                        )
+                        if data_dim is None:
+                            if kind == "out":
+                                data_dim = len(dp.output[otype])
+                            elif kind == "in":
+                                data_dim = len(dp.input)
+                            else:
+                                raise ValueError
+                            arr = np.ones([num_el, data_dim])
                         if kind == "out":
-                            data_dim = len(dp.output[otype])
+                            arr[i, :] = dp.output[otype]
                         elif kind == "in":
-                            data_dim = len(dp.input)
-                        else:
-                            raise ValueError
-                        print(data_dim)
-                        arr = np.ones([num_el, data_dim])
-                    if kind == "out":
-                        arr[i, :] = dp.output[otype]
-                    elif kind == "in":
-                        arr[i, :] = list(dp.input.values())
+                            arr[i, :] = list(dp.input.values())
                 return arr
 
     def get_inputs(self, start=0, end=None, silent=True, lazy=True):
-        print("doing inputs")
         return self._get_data("in", start=start, end=end, silent=silent, lazy=lazy)
 
     def get_outputs(
