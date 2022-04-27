@@ -55,18 +55,19 @@ x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
 # }
 # #2 max dimensions, no regularization
 
-# hyperparameters_configurations = {
-#     "hidden_layers": [1],
-#     "neurons": [40, 60, 100],
-#     "regularization_exp": [2],
-#     "regularization_param": [0,1e-4],
-#     "batch_size": [100],
-#     "epochs": [200, 500, 1000],
-#     "optimizer": ["ADAM"],
-#     "init_weight_seed": [567, 134, 124],
-#     "activation": ["tanh"],
-#     "add_sftmax_layer":[True],
-# }
+hyperparameters_configurations = {
+    "hidden_layers": [1],
+    "neurons": [100],
+    "regularization_exp": [2],
+    "regularization_param": [0, 1e-4],
+    "batch_size": [100],
+    "epochs": [1000],
+    "optimizer": ["ADAM"],
+    "init_weight_seed": [567, 134, 124],
+    "activation": ["tanh"],
+    "add_sftmax_layer": [True],
+}
+visual = True
 # #3 No 'learning' happening for the moment
 
 # hyperparameters_configurations = {
@@ -84,19 +85,19 @@ x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
 # visual=False
 # #4
 
-hyperparameters_configurations = {
-    "hidden_layers": [1],
-    "neurons": [100],
-    "regularization_exp": [0],
-    "regularization_param": [0],
-    "batch_size": [100],
-    "epochs": [1],
-    "optimizer": ["ADAM"],
-    "init_weight_seed": [567],
-    "activation": ["tanh"],
-    "add_sftmax_layer": [False],
-}
-visual = True
+# hyperparameters_configurations = {
+#     "hidden_layers": [1],
+#     "neurons": [100],
+#     "regularization_exp": [0],
+#     "regularization_param": [0],
+#     "batch_size": [100],
+#     "epochs": [4000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = True
 
 settings = list(itertools.product(*hyperparameters_configurations.values()))
 print(len(settings))
