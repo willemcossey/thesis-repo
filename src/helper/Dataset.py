@@ -223,31 +223,30 @@ class Dataset:
                     return data[f"{kind}puts"][start:end, :]
             else:
                 num_el = end - start
-                if not silent:
-                    for i in tqdm(range(num_el), disable=silent):
-                        dp = Datapoint.from_json(
-                            f"""src\\datapoints\\{self.datapoints[start + i]}"""
-                        )
+                for i in tqdm(range(num_el), disable=silent):
+                    dp = Datapoint.from_json(
+                        f"""src\\datapoints\\{self.datapoints[start + i]}"""
+                    )
+                    if data_dim is None:
                         if kind == "out":
                             if (
                                 dp.output is None
                                 or not "aggregated" in dp.output.keys()
                             ):
                                 return None
-                            data_dim = len(dp.output[otype])
-                        elif kind == "in":
+                            else:
+                                data_dim = len(dp.output[otype])
+                        else:
                             if dp.input is None:
                                 return None
-                            data_dim = len(dp.input)
-                        else:
-                            raise ValueError
-                        print(data_dim)
+                            else:
+                                data_dim = len(dp.input)
                         arr = np.ones([num_el, data_dim])
                     if kind == "out":
                         arr[i, :] = dp.output[otype]
-                    elif kind == "in":
+                    else:
                         arr[i, :] = list(dp.input.values())
-                return arr
+            return arr
 
     def get_inputs(self, start=0, end=None, silent=True, lazy=True):
         return self._get_data("in", start=start, end=end, silent=silent, lazy=lazy)
