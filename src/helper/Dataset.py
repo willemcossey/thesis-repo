@@ -8,6 +8,7 @@ from scipy.stats.qmc import Sobol, Halton
 from threading import Thread
 from tqdm import tqdm
 from os.path import exists
+import random
 
 
 class Dataset:
@@ -29,6 +30,7 @@ class Dataset:
             "children": [],
             "experiment_assumptions": assumptions,
         }
+        print(self.meta["rng"])
         self.datapoints = datapoints
         if children is not None and not lazy:
             self.import_datasets(children)
@@ -49,6 +51,7 @@ class Dataset:
         return len(self.datapoints)
 
     def generate_input(self):
+        inp = np.array([])
         if self.meta["rng"] == "sobol":
             gen = Sobol(len(self.meta["domain_bounds"].keys()))
             points = gen.random(self.size)
@@ -92,7 +95,7 @@ class Dataset:
                 ]
             )
         elif self.meta["rng"] == "single":
-            single_input = np.array(
+            inp = np.array(
                 [
                     Uniform(
                         self.meta["domain_bounds"][i][0],
@@ -102,7 +105,8 @@ class Dataset:
                 ]
                 * self.meta["size"]
             ).reshape(2, -1, order="F")
-
+        else:
+            raise ValueError
         for n in range(self.meta["size"]):
             lmb = float(inp[0, n])
             m = float(inp[1, n])
@@ -111,6 +115,8 @@ class Dataset:
                 **self.meta["experiment_assumptions"],
                 **{"lmb": lmb, "mean_opinion": m, "theta_std": theta_std},
             }
+            if self.meta["rng"] == "single":
+                ass["seed"] = random.randint(1, 2**32 - 1)
             dp = Datapoint(
                 dict(zip(self.meta["domain_bounds"].keys(), inp[:, n].tolist())), ass
             )
@@ -148,7 +154,7 @@ class Dataset:
             dp = Datapoint.from_json(f"""src\\datapoints\\{dp_name}""")
             if (dp.output is None) or (dp.output["raw"] is None):
                 dp.compute_output()
-        self.save(ftype="npz", lazy=False)
+        self.save(ftype="npz")
 
     def save(self, ftype="json"):
         t = Thread(target=self._save(ftype=ftype))
@@ -222,18 +228,25 @@ class Dataset:
                         dp = Datapoint.from_json(
                             f"""src\\datapoints\\{self.datapoints[start + i]}"""
                         )
-                        if data_dim is None:
-                            if kind == "out":
-                                data_dim = len(dp.output[otype])
-                            elif kind == "in":
-                                data_dim = len(dp.input)
-                            else:
-                                raise ValueError
-                            arr = np.ones([num_el, data_dim])
                         if kind == "out":
-                            arr[i, :] = dp.output[otype]
+                            if (
+                                dp.output is None
+                                or not "aggregated" in dp.output.keys()
+                            ):
+                                return None
+                            data_dim = len(dp.output[otype])
                         elif kind == "in":
-                            arr[i, :] = list(dp.input.values())
+                            if dp.input is None:
+                                return None
+                            data_dim = len(dp.input)
+                        else:
+                            raise ValueError
+                        print(data_dim)
+                        arr = np.ones([num_el, data_dim])
+                    if kind == "out":
+                        arr[i, :] = dp.output[otype]
+                    elif kind == "in":
+                        arr[i, :] = list(dp.input.values())
                 return arr
 
     def get_inputs(self, start=0, end=None, silent=True, lazy=True):
