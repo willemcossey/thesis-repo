@@ -19,7 +19,7 @@ parser.add_argument(
     dest="rng",
     type=str,
     default="random",
-    help="mode of random number generation. 'random' or 'sobol' or 'halton' or 'identical'",
+    help="mode of random number generation. 'random' or 'sobol' or 'halton' or 'single'",
 )
 parser.add_argument(
     "-r",
@@ -64,13 +64,9 @@ dset = Dataset(
     size=args.size,
 )
 
+print(dset.name)
+
 dset.compute_output()
 dataset_name = dset.name
 
-print(f"reconstructing from dataset file {dataset_name}.json")
-
-d = Dataset.from_json(f"src\\datasets\\{dset.name}.json")
-d.compute_output()
-d.compute_aggregated_output(20)
-
-print(d.datapoints)
+print(f"Saved as {dataset_name}.json")
