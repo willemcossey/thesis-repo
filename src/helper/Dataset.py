@@ -44,7 +44,7 @@ class Dataset:
         else:
             self.name = name
         self.save()
-        if not exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
+        if not (lazy or exists(f"""src\\datasets\\cache\\{self.name}.npz""")):
             self.save(ftype="npz")
 
     def get_size(self):
@@ -219,7 +219,9 @@ class Dataset:
             if end is None:
                 end = self.meta["size"]
             if lazy and exists(f"""src\\datasets\\cache\\{self.name}.npz"""):
-                with np.load(f"""src\\datasets\\cache\\{self.name}.npz""") as data:
+                with np.load(
+                    f"""src\\datasets\\cache\\{self.name}.npz""", allow_pickle=True
+                ) as data:
                     return data[f"{kind}puts"][start:end, :]
             else:
                 num_el = end - start
