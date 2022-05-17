@@ -26,8 +26,10 @@ regr.fit(x, y)  # LS optimum
 y_pred = regr.predict(x)
 
 RMSE_train = torch.sqrt(torch.mean((y - y_pred) ** 2))
+mean_rel_abs_error = torch.mean(abs(y - y_pred)) / torch.mean(y)
 
-print(f"""RMSE: {RMSE_train}""")
+print(f"""RMSE train: {RMSE_train}""")
+print(f"""mean rel abs error train: {mean_rel_abs_error}""")
 
 #%%
 n_test_samples = 1000
@@ -44,8 +46,10 @@ y_test_pred = regr.predict(x_test)
 
 
 RMSE_test = torch.sqrt(torch.mean((y_test - y_test_pred) ** 2))
+mean_rel_abs_error_test = torch.mean(abs(y_test - y_test_pred)) / torch.mean(y_test)
+print(f"""RMSE test set: {RMSE_test}""")
+print(f"""mean rel abs error test set: {mean_rel_abs_error_test}""")
 
-print(f"""RMSE: {RMSE_test}""")
 
 #%%
 
