@@ -32,7 +32,7 @@ class Datapoint:
             file.close()
         pass
 
-    def compute_output(self, write=True):
+    def compute_output(self, write=True, silent=False):
         sim_obj = SimulationJob(
             self.meta["gamma"],
             self.meta["theta_std"],
@@ -44,6 +44,7 @@ class Datapoint:
             self.meta["n_samples"],
             self.meta["uniform_theta"],
         )
+        sim_obj.hide_progress = silent
         sim_obj.run()
 
         self.output = {"raw": sim_obj.result}
