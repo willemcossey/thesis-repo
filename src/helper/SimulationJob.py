@@ -30,13 +30,16 @@ class SimulationJob:
         self.result = None
         self.hide_progress = False
 
-    def run(self):
+    def run(self, init_samples=None):
         # based on P&T p.135 bottom of page
 
         # set time to simulate
 
         # generate initial distribution samples
-        samples = self.init_dist.sample(self.n_samples)
+        if init_samples is None:
+            samples = self.init_dist.sample(self.n_samples)
+        else:
+            samples = init_samples
 
         # set timestep, n_iterations and current opinion dist to initial
         n_steps = self.time_horizon * self.n_samples
