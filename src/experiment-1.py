@@ -5,8 +5,6 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.use("qt5agg")
-
 # case: P = 1, D = 1-w^2
 
 # Parameter initialization
