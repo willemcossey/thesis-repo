@@ -12,6 +12,8 @@ data = Dataset.from_json(
     "src\\datasets\\7d0ca7a38db3c6cf84efa7bfa36e8a7e.json", lazy=True
 )
 
+# data.compute_aggregated_output(20)
+
 n_samples = 1000
 #%%
 x = torch.from_numpy(data.get_inputs(end=n_samples, silent=False)).to(torch.float)
@@ -55,35 +57,65 @@ x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
 # }
 # #2 max dimensions, no regularization
 
-hyperparameters_configurations = {
-    "hidden_layers": [1],
-    "neurons": [100],
-    "regularization_exp": [2],
-    "regularization_param": [0, 1e-4],
-    "batch_size": [100],
-    "epochs": [1000],
-    "optimizer": ["ADAM"],
-    "init_weight_seed": [567, 134, 124],
-    "activation": ["tanh"],
-    "add_sftmax_layer": [True],
-}
-visual = True
+# hyperparameters_configurations = {
+#     "hidden_layers": [1],
+#     "neurons": [100],
+#     "regularization_exp": [2],
+#     "regularization_param": [0, 1e-4],
+#     "batch_size": [100],
+#     "epochs": [1000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567, 134, 124],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [True],
+# }
+# visual = True
 # #3 No 'learning' happening for the moment
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [1],
-#     "neurons": [100,200],
+#     "neurons": [100, 200],
 #     "regularization_exp": [2],
 #     "regularization_param": [0],
-#     "batch_size": [100],
-#     "epochs": [2000,3000,4000],
+#     "batch_size": [n_samples],
+#     "epochs": [2000, 3000, 4000],
 #     "optimizer": ["ADAM"],
 #     "init_weight_seed": [567, 134, 124],
 #     "activation": ["tanh"],
-#     "add_sftmax_layer":[False],
+#     "add_sftmax_layer": [False],
 # }
-# visual=False
+# visual = True
 # #4
+
+# hyperparameters_configurations = {
+#     "hidden_layers": [1,2,3,4],
+#     "neurons": [200],
+#     "regularization_exp": [2],
+#     "regularization_param": [0],
+#     "batch_size": [n_samples],
+#     "epochs": [2000, 4000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
+# #5 - 2 layers, 4000 epochs - 14.8% test error
+
+hyperparameters_configurations = {
+    "hidden_layers": [2, 3, 4],
+    "neurons": [200],
+    "regularization_exp": [2],
+    "regularization_param": [0],
+    "batch_size": [n_samples],
+    "epochs": [4000, 6000, 8000],
+    "optimizer": ["ADAM"],
+    "init_weight_seed": [567],
+    "activation": ["tanh"],
+    "add_sftmax_layer": [False],
+}
+visual = False
+# #6 - 3 layers, 8000 epochs - 12.6% test error
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [1],
@@ -165,3 +197,5 @@ plt.legend(["Training", "Validation", "Generalization"])
 plt.grid(visible=True, which="both", axis="both")
 # plt.savefig("./sigma_" + str(sigma) + ".png", dpi=4001)
 plt.show(block=True)
+
+#%% Train and save best model
