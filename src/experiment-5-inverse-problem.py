@@ -2,7 +2,8 @@ import numpy as np
 import os.path
 from helper.Distribution import Normal, Uniform
 from helper.InverseProblem import InverseProblem
-from helper.ExperimentVisualizer import ExperimentVisualizer
+
+# from helper.ExperimentVisualizer import ExperimentVisualizer
 import time
 import argparse
 import random
@@ -139,11 +140,6 @@ np.savez(output_file, lmb=samples["lmb"], m=samples["m"])
 
 
 # plot results
-if args.show:
-    ExperimentVisualizer.from_samples_file(
-        output_file + ".npz",
-        solver_settings["num_burn_in"],
-        underlyng_lmb,
-        underlying_m,
-        mode="series",
-    )
+# if args.show:
+#     ExperimentVisualizer.from_samples_file(
+#         output_file + ".npz", solver_settings["num_burn_in"], underlyng_lmb, underlying_m, mode='series')

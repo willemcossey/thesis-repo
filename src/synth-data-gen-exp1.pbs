@@ -1,0 +1,6 @@
+#!/bin/bash -l
+#PBS -l nodes=1:ppn=13
+#PBS -l walltime=0:02:00
+
+module load Python/3.7.2-foss-2018a
+python experiment-4-generate-synth-data.py -l $LAMBDA -m $MEAN -n $N_AGENTS -t $T_HORIZ

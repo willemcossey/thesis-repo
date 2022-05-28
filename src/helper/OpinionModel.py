@@ -31,7 +31,7 @@ class OpinionModel:
         self.theta_bound = theta_bnd
         self.uniform_theta = uniform_theta
 
-    def apply_operator(self, two_samples: list[(float, int)]) -> list:
+    def apply_operator(self, two_samples):
         assert len(two_samples) == 2
         assert ((two_samples[0] <= 1) & (two_samples[0] >= -1)) & (
             (two_samples[1] <= 1) & (two_samples[1] >= -1)

@@ -9,7 +9,7 @@ import winsound
 # import dataset
 
 data = Dataset.from_json(
-    "src\\datasets\\7d0ca7a38db3c6cf84efa7bfa36e8a7e.json", lazy=True
+    "src/datasets/7d0ca7a38db3c6cf84efa7bfa36e8a7e.json", lazy=True
 )
 
 # data.compute_aggregated_output(20)
