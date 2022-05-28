@@ -2,10 +2,11 @@ import torch
 from torch import nn, optim, utils
 from torch.utils.data import DataLoader
 import numpy as np
-from math import floor, ceil
+from math import floor, ceil, exp
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from matplotlib import markers
+from helper.Distribution import Uniform
 
 
 # Based on code provided for the course "Deep Learning and Scientific Computing" at ETH Spring Semester 2022.
@@ -202,8 +203,10 @@ class NeuralNet(nn.Module):
         return history
 
     @staticmethod
-    def train_single_configuration(conf_dict, x_, y_, visual_check=False):
+    def train_single_configuration(conf_dict, x_, y_, visual_check=None):
 
+        if visual_check is None:
+            visual_check = False
         print(conf_dict)
 
         # Get the configuration to test
@@ -223,14 +226,14 @@ class NeuralNet(nn.Module):
         np.random.seed(retrain_seed)
 
         # define size of test,training and validation data
-        test_ratio = 0.2
-        val_ratio = 0.16
-        train_ratio = 0.64
+        test_ratio = 0
+        val_ratio = 0.2
+        train_ratio = 0.8
         assert np.equal(test_ratio + val_ratio + train_ratio, 1.0)
 
         validation_size = ceil(val_ratio * x_.shape[0])
         training_size = floor(train_ratio * x_.shape[0])
-        test_size = x_.shape[0] - validation_size - training_size
+        # test_size = x_.shape[0] - validation_size - training_size
 
         x_train = x_[:training_size, :]
         y_train = y_[:training_size, :]
@@ -238,8 +241,38 @@ class NeuralNet(nn.Module):
         x_val = x_[training_size + 1 : training_size + validation_size, :]
         y_val = y_[training_size + 1 : training_size + validation_size, :]
 
-        x_test = x_[training_size + validation_size :, :]
-        y_test = y_[training_size + validation_size :, :]
+        # x_test = x_[training_size + validation_size :, :]
+        n_test_samples = 10
+        x_test = torch.ones(n_test_samples, 2)
+        x_test[:, 0] = torch.tensor(Uniform(0, 12).sample(n_test_samples))
+        x_test[:, 1] = torch.tensor(Uniform(-1, 1).sample(n_test_samples))
+        n_buckets = len(y_[0])
+        h = 2 / n_buckets
+        centers = [-1 + h / 2 + i * h for i in range(n_buckets)]
+
+        def inv_dist(w, m, lam):
+            if abs(w) == 1:
+                return 0
+            else:
+
+                res1 = np.log(1 + w) * (-2 + (m / (2 * lam)))
+                res2 = np.log(1 - w) * (-2 - (m / (2 * lam)))
+                res3 = -((1 - m * w) / (lam * (1 - w**2)))
+                if exp(res1 + res2 + res3) == 0:
+                    print(w, m, lam)
+                return np.exp(res1 + res2 + res3)
+
+        def inv_dist_norm(c, m, lam):
+            y = [inv_dist(s, m, lam) for s in c]
+            sum = np.array(y).sum()
+            if sum is None or sum == 0 or sum == torch.nan:
+                print(sum)
+            return y / sum
+
+        y_test = torch.tensor(
+            np.array([inv_dist_norm(centers, p[1], p[0]) for p in x_test])
+        )
+        # y_test = y_[training_size + validation_size :, :]
 
         training_set = utils.data.DataLoader(
             utils.data.TensorDataset(x_train, y_train),
@@ -286,12 +319,15 @@ class NeuralNet(nn.Module):
         y_test = y_test.reshape(
             -1,
         )
+
         y_val = y_val.reshape(
             -1,
         )
         y_train = y_train.reshape(
             -1,
         )
+        # normalize inputs before feeding to nn
+        x_test = (x_test - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
         y_test_pred = my_network(x_test)
         y_val_pred = my_network(x_val)
         y_train_pred = my_network(x_train)
@@ -353,8 +389,8 @@ class NeuralNet(nn.Module):
         )
 
         # Compute the relative L2 error norm (generalization error)
-        relative_error_test = torch.mean(abs(y_test_pred - y_test)) / torch.mean(
-            abs(y_test)
+        relative_error_test = torch.mean(torch.abs(y_test_pred - y_test)) / torch.mean(
+            torch.abs(y_test)
         )
         print(
             "Relative Testing Error: ",
