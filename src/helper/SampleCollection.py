@@ -6,7 +6,7 @@ class SampleCollection:
         # check if list not nested
         self.members = lst
 
-    # Takes in two collections of samples and returns the probabilitys
+    # Takes in two collections of samples and returns the probability
     # that both collections stem from the same distribution.
     def compare(self, other, metric="KS"):
         if metric == "KS":
