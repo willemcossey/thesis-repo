@@ -2,22 +2,35 @@ from helper.SimulationJob import SimulationJob
 import random
 import numpy as np
 from math import sqrt
+from os import path
+import subprocess
 
 # from copy import deepcopy
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-random.seed(42)
-np.random.seed(42)
+seed = 42
+
+random.seed(seed)
+np.random.seed(seed)
 
 n_parconfig = 3
 n_instances_per_parconfig = 10
+low_n_agents = 2
+high_n_agents = 4
+len_n_agents = 8
 n_agents_for_instance = (
-    np.round(np.power(10, np.linspace(2, 4, 8))).astype(int).tolist()
+    np.round(
+        np.power(
+            10, np.linspace(low_n_agents, high_n_agents, len_n_agents, endpoint=True)
+        )
+    )
+    .astype(int)
+    .tolist()
 )
 # n_agents_for_instance = [100,1000,10000]
 t_step = 10
-n_timesteps = 10
+n_timesteps = 40
 n_buckets = 20
 
 lmbs = np.linspace(0.1, 5, n_parconfig, endpoint=False)
@@ -71,6 +84,11 @@ for a in range(len(n_agents_for_instance)):
 
 #%%
 
+git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
+filename_str = f"experiment-14-p-{n_parconfig}-i-{n_instances_per_parconfig}-a-{low_n_agents}-{high_n_agents}-{len_n_agents}-t-{t_step}-ts-{n_timesteps}-n-{n_buckets}-seed-{seed}-git-{git_label}"
+experiment_data_dir = path.join("src", "experiment-data")
+np.savez(path.join(experiment_data_dir, f"{filename_str}.npz"), raw=result_list)
+
 
 def inv_dist(w, m, lam):
     if abs(w) == 1:
@@ -98,8 +116,8 @@ x.sort()
 
 #%% First visualization: behaviour over time for one a and p.
 
-a = 2
-p = 1
+a = -1
+p = -1
 
 data = result_list[a, p, :, :]
 
@@ -113,7 +131,8 @@ for t in range(0, n_timesteps, 2):
     plt.plot(centers, avg_data[t], label=f"t = {(t+1)*t_step}")
 plt.plot(x, y_exact, label=f"analytical solution", color="red", marker="o")
 plt.legend()
-plt.show()
+# plt.show()
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-1.png"))
 
 #%% mean(mean solution wrt i - analytical solution) wrt p as a function of a for fixed t
 
@@ -134,13 +153,17 @@ for p in range(n_parconfig):
 err_agg = np.mean(errors, axis=(1, 2))
 
 plt.figure()
+if len_n_agents == 1:
+    plt.loglog(
+        n_agents_for_instance, err_agg[:, t], label=f"t = {(t+1)*t_step}", marker="o"
+    )
 for t in range(0, n_timesteps, 2):
     plt.loglog(n_agents_for_instance, err_agg[:, t], label=f"t = {(t+1)*t_step}")
 plt.legend()
 plt.xlabel("#particles simulated")
 plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
-plt.show()
-
+# plt.show()
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-2.png"))
 
 #%% mean wrt i as a function of t for fixed a
 
@@ -157,6 +180,7 @@ for p in range(n_parconfig):
                 errors[a, p, i, t] = np.linalg.norm(
                     data[a, p, i, t] - exact_solutions[p], 2
                 )
+
 
 err_agg = np.mean(errors, axis=(1, 2))
 
@@ -176,7 +200,8 @@ plt.loglog(
 plt.legend()
 plt.xlabel("simulated time")
 plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
-plt.show()
+# plt.show()
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-3.png"))
 
 
 #%%
@@ -195,8 +220,8 @@ for p in range(n_parconfig):
                     data[a, p, i, t] - exact_solutions[p], 2
                 )
 
-p = 2
-a = 7
+p = -1
+a = -1
 
 err_mean = np.mean(errors[a, p, :, :], axis=0)
 err_lower_conf = np.percentile(errors[a, p, :, :], 95, axis=0)
@@ -214,7 +239,8 @@ plt.fill_between(
 plt.plot([(t + 1) * t_step for t in range(n_timesteps)], err_mean, color="red")
 plt.xlabel("simulated time")
 plt.ylabel("$|avg solution - analytical solution|_{L^2}$")
-plt.show()
+# plt.show()
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-4.png"))
 
 
 #%%
@@ -233,7 +259,8 @@ for p in range(n_parconfig):
                     data[a, p, i, t] - exact_solutions[p], 2
                 )
 
-a = 7
+
+a = -1
 
 
 plt.figure()
@@ -252,4 +279,5 @@ for p in range(n_parconfig):
 plt.xlabel("simulated time")
 plt.ylabel("$|avg solution - analytical solution|_{L^2}$")
 plt.legend()
-plt.show()
+# plt.show()
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-5.png"))

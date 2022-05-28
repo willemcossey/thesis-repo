@@ -2,21 +2,32 @@ from helper.Datapoint import Datapoint
 import random
 import numpy as np
 from math import sqrt
+from os import path
+import subprocess
 
 # from copy import deepcopy
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-
-random.seed(42)
-np.random.seed(42)
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
 
 n_parconfig = 5
-n_instances_per_parconfig = 1
+n_instances_per_parconfig = 10
+low_n_agents = 2
+high_n_agents = 4
+len_n_agents = 8
 n_agents_for_instance = (
-    np.round(np.power(10, np.linspace(2, 6, 16))).astype(int).tolist()
+    np.round(
+        np.power(
+            10, np.linspace(low_n_agents, high_n_agents, len_n_agents, endpoint=True)
+        )
+    )
+    .astype(int)
+    .tolist()
 )
-t_horiz_for_instance = 10
+t_horiz_for_instance = 100
 n_buckets = 20
 
 lmbs = np.linspace(0.1, 5, n_parconfig, endpoint=False)
@@ -62,27 +73,38 @@ for a in range(len(n_agents_for_instance)):
 
 #%%
 
-std = []
+errors = np.ones([len_n_agents, n_parconfig])
+outputs = np.ones([len_n_agents, n_parconfig, n_instances_per_parconfig, n_buckets])
 
-for a in range(len(n_agents_for_instance)):
-    std.append([])
+for a in range(len_n_agents):
     for p in range(n_parconfig):
         [dp.compute_aggregated_output(n_buckets) for dp in dp_list[a][p]]
-        outputs = [dp.output["aggregated"] for dp in dp_list[a][p]]
+        outputs[a, p, :, :] = np.array(
+            [dp.output["aggregated"] for dp in dp_list[a][p]]
+        )
         print(a, p)
-        std[a].append(np.std(outputs, axis=0))
+        mean_solution = np.mean(outputs[a, p, :, :], axis=0)
+        res = outputs[a, p, :, :] - mean_solution
+        abs_errors = np.abs(res)
+        mean_abs_err = np.mean(abs_errors)
+        RMAE = np.divide(mean_abs_err, np.mean(np.abs(mean_solution)))
+        errors[a, p] = RMAE
 
 #%%
+git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
+filename_str = f"experiment-13-p-{n_parconfig}-i-{n_instances_per_parconfig}-a-{low_n_agents}-{high_n_agents}-{len_n_agents}-t_horiz-{t_horiz_for_instance}-n-{n_buckets}-seed-{seed}-git-{git_label}"
+experiment_data_dir = path.join("src", "experiment-data")
+np.savez(path.join(experiment_data_dir, f"{filename_str}.npz"), errors=errors)
 
-mean_std = [
-    np.mean([std[a][i] for i in range(n_parconfig)])
+mean_error = [
+    np.mean([errors[a, p] for p in range(n_parconfig)])
     for a in range(len(n_agents_for_instance))
 ]
 
-print(mean_std)
+print(mean_error)
 
 plt.figure()
-plt.loglog(n_agents_for_instance, mean_std, label="mean std")
+plt.loglog(n_agents_for_instance, mean_error, label="mean RMAE")
 plt.loglog(
     np.linspace(10**2, 10**4, 100),
     0.1 * np.power(np.linspace(10**2, 10**4, 100), -0.5),
@@ -95,4 +117,5 @@ plt.title(
     f"#configurations = {n_parconfig}, #repetitions = {n_instances_per_parconfig}, #buckets = {n_buckets}"
 )
 plt.legend()
-plt.show(block=True)
+# plt.show(block=True)
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-1.png"))
