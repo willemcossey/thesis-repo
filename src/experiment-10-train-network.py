@@ -28,6 +28,7 @@ print(y[1, :])
 x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
 
 #%%
+visual = None
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [1],
@@ -39,22 +40,24 @@ x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
 #     "optimizer": ["ADAM"],
 #     "init_weight_seed": [567, 134, 124],
 #     "activation": ["tanh"],
+#     "add_softmax":["False"],
 # }
+
 # linear output
 # #mlp-1 max dimensions
 
-# hyperparameters_configurations = {
-#     "hidden_layers": [1],
-#     "neurons": [40, 60, 100],
-#     "regularization_exp": [2],
-#     "regularization_param": [0,1e-4],
-#     "batch_size": [100],
-#     "epochs": [200, 500, 1000],
-#     "optimizer": ["ADAM"],
-#     "init_weight_seed": [567, 134, 124],
-#     "activation": ["tanh"],
-#     "add_softmax":["False"],
-# }
+hyperparameters_configurations = {
+    "hidden_layers": [1],
+    "neurons": [40, 60, 100],
+    "regularization_exp": [2],
+    "regularization_param": [0, 1e-4],
+    "batch_size": [100],
+    "epochs": [200, 500, 1000],
+    "optimizer": ["ADAM"],
+    "init_weight_seed": [567, 134, 124],
+    "activation": ["tanh"],
+    "add_softmax": ["False"],
+}
 # #2 max dimensions, no regularization
 
 # hyperparameters_configurations = {
@@ -102,30 +105,31 @@ x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
 # visual = False
 # #5 - 2 layers, 4000 epochs - 14.8% test error
 
-hyperparameters_configurations = {
-    "hidden_layers": [2, 3, 4],
-    "neurons": [200],
-    "regularization_exp": [2],
-    "regularization_param": [0],
-    "batch_size": [n_samples],
-    "epochs": [4000, 6000, 8000],
-    "optimizer": ["ADAM"],
-    "init_weight_seed": [567],
-    "activation": ["tanh"],
-    "add_sftmax_layer": [False],
-}
-visual = False
-# #6 - 3 layers, 8000 epochs - 12.6% test error
-
 # hyperparameters_configurations = {
-#     "hidden_layers": [1],
-#     "neurons": [100],
-#     "regularization_exp": [0],
+#     "hidden_layers": [2, 3, 4],
+#     "neurons": [200],
+#     "regularization_exp": [2],
 #     "regularization_param": [0],
-#     "batch_size": [100],
-#     "epochs": [4000],
+#     "batch_size": [n_samples],
+#     "epochs": [4000, 6000, 8000],
 #     "optimizer": ["ADAM"],
 #     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
+# 6 - 3 layers, 8000 epochs - 12.6% test error
+# 6 - analytical test - 2l, 4000 - 21.8% t, 13 tr, 14 v
+
+# hyperparameters_configurations = {
+#     "hidden_layers": [2],
+#     "neurons": [200],
+#     "regularization_exp": [0],
+#     "regularization_param": [0],
+#     "batch_size": [n_samples],
+#     "epochs": [4000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [568],
 #     "activation": ["tanh"],
 #     "add_sftmax_layer": [False],
 # }
