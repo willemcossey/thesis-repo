@@ -4,7 +4,7 @@ import numpy as np
 from math import sqrt
 import json
 import hashlib
-from scipy.stats.qmc import Sobol, Halton
+# from scipy.stats.qmc import Sobol, Halton
 from threading import Thread
 from tqdm import tqdm
 from os.path import exists
