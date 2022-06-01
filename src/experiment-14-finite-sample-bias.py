@@ -54,7 +54,7 @@ for a in range(len(n_agents_for_instance)):
             latest_result = None
             for t in range(n_timesteps):
                 n_agents = n_agents_for_instance[a]
-                seed = random.randint(1, 2**32 - 1)
+                seed = random.randint(1, 2 ** 32 - 1)
                 lmb = lmbs[p]
                 m = ms[p]
                 gamma = 0.005
@@ -65,7 +65,7 @@ for a in range(len(n_agents_for_instance)):
                     theta_std,
                     lambda g, w: (1 - g) / (1 + abs(w)),
                     lambda w: 1,
-                    lambda w: (1 - w**2),  # P&T p. 241
+                    lambda w: (1 - w ** 2),  # P&T p. 241
                     m,
                     t_step,
                     n_agents,
@@ -97,7 +97,7 @@ def inv_dist(w, m, lam):
 
         res = np.power((1 + w), (-2 + (m / (2 * lam))))
         res = res * (1 - w) ** (-2 - (m / (2 * lam)))
-        res = res * np.exp(-((1 - m * w) / (lam * (1 - w**2))))
+        res = res * np.exp(-((1 - m * w) / (lam * (1 - w ** 2))))
         return res
 
 
