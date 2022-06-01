@@ -4,13 +4,14 @@ import numpy as np
 from math import sqrt
 import json
 import hashlib
+
 # from scipy.stats.qmc import Sobol, Halton
 from threading import Thread
 from tqdm import tqdm
 from os.path import exists
 import random
 
-
+# Create a dataset object. A dataset is a collection of Datapoint objects. It is a collection of input-output pairs. The object only points to the location where its datapoints are stored.
 class Dataset:
     def __init__(
         self,
@@ -47,44 +48,14 @@ class Dataset:
         if not (lazy or exists(f"""src\\datasets\\cache\\{self.name}.npz""")):
             self.save(ftype="npz")
 
+    # Return the number of datapoints contained in the dataset
     def get_size(self):
         return len(self.datapoints)
 
+    # Generate a number of datapoints that only have inputs. The inputs are computed according to the 'rng' argument specified.
     def generate_input(self):
         inp = np.array([])
-        if self.meta["rng"] == "sobol":
-            gen = Sobol(len(self.meta["domain_bounds"].keys()))
-            points = gen.random(self.size)
-            inp = np.transpose(
-                np.array(
-                    [
-                        points[:, i]
-                        * (
-                            self.meta["domain_bounds"][i][1]
-                            - self.meta["domain_bounds"][i][0]
-                        )
-                        + self.meta["domain_bounds"][i][0]
-                        for i in self.meta["domain_bounds"].keys()
-                    ]
-                )
-            )
-        elif self.meta["rng"] == "halton":
-            gen = Halton(len(self.meta["domain_bounds"].keys()))
-            points = gen.random(self.size)
-            inp = np.transpose(
-                np.array(
-                    [
-                        points[:, i]
-                        * (
-                            self.meta["domain_bounds"][i][1]
-                            - self.meta["domain_bounds"][i][0]
-                        )
-                        + self.meta["domain_bounds"][i][0]
-                        for i in self.meta["domain_bounds"].keys()
-                    ]
-                )
-            )
-        elif self.meta["rng"] == "random":
+        if self.meta["rng"] == "random":
             inp = np.array(
                 [
                     Uniform(
@@ -94,6 +65,38 @@ class Dataset:
                     for i in self.meta["domain_bounds"].keys()
                 ]
             )
+        # elif self.meta["rng"] == "sobol":
+        #     gen = Sobol(len(self.meta["domain_bounds"].keys()))
+        #     points = gen.random(self.size)
+        #     inp = np.transpose(
+        #         np.array(
+        #             [
+        #                 points[:, i]
+        #                 * (
+        #                     self.meta["domain_bounds"][i][1]
+        #                     - self.meta["domain_bounds"][i][0]
+        #                 )
+        #                 + self.meta["domain_bounds"][i][0]
+        #                 for i in self.meta["domain_bounds"].keys()
+        #             ]
+        #         )
+        #     )
+        # elif self.meta["rng"] == "halton":
+        #     gen = Halton(len(self.meta["domain_bounds"].keys()))
+        #     points = gen.random(self.size)
+        #     inp = np.transpose(
+        #         np.array(
+        #             [
+        #                 points[:, i]
+        #                 * (
+        #                     self.meta["domain_bounds"][i][1]
+        #                     - self.meta["domain_bounds"][i][0]
+        #                 )
+        #                 + self.meta["domain_bounds"][i][0]
+        #                 for i in self.meta["domain_bounds"].keys()
+        #             ]
+        #         )
+        #     )
         elif self.meta["rng"] == "single":
             inp = np.array(
                 [
@@ -116,7 +119,7 @@ class Dataset:
                 **{"lmb": lmb, "mean_opinion": m, "theta_std": theta_std},
             }
             if self.meta["rng"] == "single":
-                ass["seed"] = random.randint(1, 2**32 - 1)
+                ass["seed"] = random.randint(1, 2 ** 32 - 1)
             dp = Datapoint(
                 dict(zip(self.meta["domain_bounds"].keys(), inp[:, n].tolist())), ass
             )
@@ -124,6 +127,7 @@ class Dataset:
         self.meta["size"] = self.get_size()
         pass
 
+    # Import the datapoints from the datasets specified in 'child_name_array' into the current dataset object. Used to merge existing datasets.
     def import_datasets(self, child_name_array):
         # load datasets
         child_array = []
@@ -149,6 +153,7 @@ class Dataset:
         # update size
         self.meta["size"] = self.get_size()
 
+    # Compute the outputs of the datapoints
     def compute_output(self):
         for dp_name in self.datapoints:
             dp = Datapoint.from_json(f"""./src/datapoints/{dp_name}""")
@@ -156,12 +161,14 @@ class Dataset:
                 dp.compute_output()
         self.save(ftype="npz")
 
+    # Save the dataset. A thread is used to prevent file corruption in case of an error.
     def save(self, ftype="json"):
         t = Thread(target=self._save(ftype=ftype))
         t.start()
         t.join()
         pass
 
+    # Save the object as a json file.
     def _save(self, ftype):
         if ftype == "json":
             with open(f"""./src/datasets/{self.name}.json""", mode="w") as file:
@@ -180,6 +187,7 @@ class Dataset:
         else:
             raise ValueError
 
+    # Compute an aggregated version of the outputs. In this case a histogram is constructed. The histograms are normalized and sums to 1.
     def compute_aggregated_output(self, n):
         # Compute the effective 'histogram' of the solution over n equispaced intervals.
         for dp_name in tqdm(self.datapoints):
@@ -195,6 +203,7 @@ class Dataset:
     def to_json(self):
         return self.__dict__
 
+    # Load the object from a file. If 'lazy' is True, The datapoint outputs are not recomputed.
     @staticmethod
     def from_json(filename, lazy=False):
         f = open(filename, "r+")
@@ -212,6 +221,7 @@ class Dataset:
             lazy=lazy,
         )
 
+    # Fetch (part of) input or output data for the dataset. If 'lazy' is True, the cache is referenced to see if there is a cached version of the dataset present.
     def _get_data(self, kind, start=0, end=None, otype="raw", silent=True, lazy=True):
         if kind in ["in", "out"]:
             data_dim = None
@@ -250,9 +260,11 @@ class Dataset:
                         arr[i, :] = list(dp.input.values())
             return arr
 
+    # Get (part of) the inputs of the datapoints of the dataset
     def get_inputs(self, start=0, end=None, silent=True, lazy=True):
         return self._get_data("in", start=start, end=end, silent=silent, lazy=lazy)
 
+    # Get (part of) the outputs of the datapoints of the dataset.
     def get_outputs(
         self, start=0, end=None, otype="aggregated", silent=True, lazy=True
     ):
@@ -260,6 +272,7 @@ class Dataset:
             "out", start=start, end=end, otype=otype, silent=silent, lazy=lazy
         )
 
+    # Check if the current dataset has any datapoints that have a corrupted json file in it.
     def is_sane(self):
         corrupted_list = []
         for dp_name in self.datapoints:

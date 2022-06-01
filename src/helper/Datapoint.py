@@ -4,7 +4,7 @@ import numpy as np
 import hashlib
 from threading import Thread
 
-
+# Construct a Datapoint class. Datapoints are input-output pairs generated with the help of some metadata.
 class Datapoint:
     def __init__(self, input_dict, assumptions_dict, output=None, name=None):
         self.input = input_dict
@@ -18,12 +18,14 @@ class Datapoint:
             self.name = name
         self.save()
 
+    # Save the object. A thread is used to prevent file corruption in case of an error.
     def save(self):
         t = Thread(target=self._save)
         t.start()
         t.join()
         pass
 
+    # Save the object as a json file.
     def _save(self):
         jstr = self.to_json()
         with open(f"""src/datapoints/{self.name}.json""", mode="w") as file:
@@ -32,6 +34,7 @@ class Datapoint:
             file.close()
         pass
 
+    # Compute the raw output of the datapoint from the metadata.
     def compute_output(self, write=True, silent=False):
         sim_obj = SimulationJob(
             self.meta["gamma"],
@@ -51,6 +54,7 @@ class Datapoint:
         self.save()
         pass
 
+    # Compute an aggregate of the raw output. In this case a histogram is constructed. The histogram is normalized and sums to 1.
     def compute_aggregated_output(self, n):
         h = 2 / n
         self.output["aggregated"] = list(
@@ -59,9 +63,12 @@ class Datapoint:
         self.save()
         pass
 
+    # Return the object as a dictionary object ready to be serialized.
     def to_json(self):
         return self.__dict__
 
+    # Create a datapoint object from a file.
+    # Raises a JSONDecodeError if a corrupt json file is found.
     @staticmethod
     def from_json(filename):
         f = open(filename, "r+")
