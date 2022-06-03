@@ -1,7 +1,0 @@
-#!/bin/bash -l
-#PBS -l nodes=1:ppn=3
-#PBS -l walltime=0:04:00
-
-module load Python/3.7.2-foss-2018a
-python experiment-5-inverse-problem.py $FILE -tl $TRUE_LAMBDA -tm $TRUE_MEAN -o $OBSERVATIONS -w $NOISE_LEVEL -s $N_SAMPLES -b $BURN_IN -p $PROPOSAL -t $T_HORIZ -n $N_AGENTS								
-

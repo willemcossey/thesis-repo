@@ -1,6 +1,0 @@
-#!/bin/bash -l
-#PBS -l nodes=1:ppn=33
-#PBS -l walltime=02:00:00
-
-module load Python/3.7.2-foss-2018a
-python src/experiment-8-generate-dataset.py -s 2 -t 300 -n 10000 -m 'single'
