@@ -75,5 +75,5 @@ for lmb in [0.1, 0.5, 1, 2]:
         plt.xlabel("Opinion []")
         plt.ylabel("Count []")
         plt.savefig(
-            f"experiment-data\\experiment-3-uniform-theta-lambda-{lamb}-mean-{mean_opinion}-nagents-{nagents}-t-horiz-{t_horiz}.png"
+            f"experiment-data/experiment-3-uniform-theta-lambda-{lamb}-mean-{mean_opinion}-nagents-{nagents}-t-horiz-{t_horiz}.png"
         )

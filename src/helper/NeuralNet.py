@@ -9,11 +9,11 @@ from matplotlib import markers
 from helper.Distribution import Uniform
 
 
-# Based on code provided for the course "Deep Learning and Scientific Computing" at ETH Spring Semester 2022.
-# Thanks to Roberto Molinaro for this part of the code.
-# https://gitlab.ethz.ch/mroberto
-# https://math.ethz.ch/sam/the-institute/people.html?u=mroberto
-# https://www.linkedin.com/in/roberto-molinaro-16806b145
+### Based on code provided for the course "Deep Learning and Scientific Computing" at ETH Spring Semester 2022.
+### Thanks to Roberto Molinaro for this part of the code.
+### https://gitlab.ethz.ch/mroberto
+### https://math.ethz.ch/sam/the-institute/people.html?u=mroberto
+### https://www.linkedin.com/in/roberto-molinaro-16806b145
 
 
 class NeuralNet(nn.Module):

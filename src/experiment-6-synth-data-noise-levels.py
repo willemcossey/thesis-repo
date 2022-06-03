@@ -10,8 +10,8 @@ synth_data_file = "synth-data-lmb-1-m--0.1-t_horiz-200-nagents-100000.npy"
 # synth data:
 synth_data = np.load(
     os.path.join(
-        "C:\\Users\\wille",
-        "masterproef-willem-cossey\\src",
+        "C:/Users/wille",
+        "masterproef-willem-cossey/src",
         "experiment-data",
         synth_data_file,
     )
@@ -31,7 +31,7 @@ for noise_std in np.linspace(0, 2, 11):
 
     p = ExperimentVisualizer.from_array(noisy_data)
     p.savefig(
-        f"experiment-data\\add-noise-validation\\experiment-6-noise_std-{noise_std}-to-{synth_data_file}-.png"
+        f"experiment-data/add-noise-validation/experiment-6-noise_std-{noise_std}-to-{synth_data_file}-.png"
     )
     # p.show()
     p.close()
