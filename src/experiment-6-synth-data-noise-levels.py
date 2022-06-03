@@ -10,8 +10,7 @@ synth_data_file = "synth-data-lmb-1-m--0.1-t_horiz-200-nagents-100000.npy"
 # synth data:
 synth_data = np.load(
     os.path.join(
-        "C:/Users/wille",
-        "masterproef-willem-cossey/src",
+        "src",
         "experiment-data",
         synth_data_file,
     )

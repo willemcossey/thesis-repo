@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from os import path
 
 matplotlib.use("qt5agg")
 
@@ -75,5 +76,5 @@ for lmb in [0.1, 0.5, 1, 2]:
         plt.xlabel("Opinion []")
         plt.ylabel("Count []")
         plt.savefig(
-            f"experiment-data/experiment-3-uniform-theta-lambda-{lamb}-mean-{mean_opinion}-nagents-{nagents}-t-horiz-{t_horiz}.png"
-        )
+            path.join("experiment-data",f"experiment-3-uniform-theta-lambda-{lamb}-mean-{mean_opinion}-nagents-{nagents}-t-horiz-{t_horiz}.png"
+        ))

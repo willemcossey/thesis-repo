@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from os import path
 
 matplotlib.use("qt5agg")
 
@@ -61,7 +62,7 @@ reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w
 
 
 np.save(
-    f"experiment-data\experiment-2-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}",
+    path.join("experiment-data",f"experiment-2-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}"),
     sim.result,
 )
 

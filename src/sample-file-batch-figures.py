@@ -1,4 +1,5 @@
 from helper.ExperimentVisualizer import ExperimentVisualizer
+from os import path
 
 pathdict = dict(
     paths=[
@@ -60,8 +61,8 @@ for i in range(len(pathdict["paths"])):
         pathdict["m"][i],
     )
     f.savefig(f"hist-from--{pathdict['paths'][i]}-.png")
-    f = ExperimentVisualizer.from_samples_file(
-        "experiment-data\\" + pathdict["paths"][i],
+    f = ExperimentVisualizer.from_samples_file(path.join(
+        "experiment-data",f"{pathdict['paths'][i]}"),
         pathdict["b"][i],
         pathdict["l"][i],
         pathdict["m"][i],

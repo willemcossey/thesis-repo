@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from os import path
 
 # case: P = 1, D = 1-w^2
 
@@ -61,7 +62,7 @@ mean_ref_result = np.mean(reference["g_inf(w)"])
 reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w)"]
 
 np.save(
-    f"experiment-data/experiment-1-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}",
+    path.join("experiment-data",f"experiment-1-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}"),
     sim.result,
 )
 

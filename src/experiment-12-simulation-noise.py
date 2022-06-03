@@ -4,11 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from helper.Dataset import Dataset
 from sklearn.linear_model import LinearRegression
+from os import path
 
 # import dataset
 
 data = Dataset.from_json(
-    "src\\datasets\\19dd290bf11a4ff6ff8a74793d7f16ae.json", lazy=True
+    path.join("src","datasets","19dd290bf11a4ff6ff8a74793d7f16ae.json"), lazy=True
 )
 
 print(data.meta)
