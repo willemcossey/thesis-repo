@@ -257,7 +257,7 @@ class NeuralNet(nn.Module):
 
                 res1 = np.log(1 + w) * (-2 + (m / (2 * lam)))
                 res2 = np.log(1 - w) * (-2 - (m / (2 * lam)))
-                res3 = -((1 - m * w) / (lam * (1 - w**2)))
+                res3 = -((1 - m * w) / (lam * (1 - w ** 2)))
                 if exp(res1 + res2 + res3) == 0:
                     print(w, m, lam)
                 return np.exp(res1 + res2 + res3)

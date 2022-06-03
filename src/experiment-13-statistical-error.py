@@ -43,7 +43,7 @@ for a in range(len(n_agents_for_instance)):
         dp_list[a].append([])
         for i in tqdm(range(n_instances_per_parconfig)):
             n_agents = n_agents_for_instance[a]
-            seed = random.randint(1, 2**32 - 1)
+            seed = random.randint(1, 2 ** 32 - 1)
             lmb = lmbs[p]
             m = ms[p]
             gamma = 0.005
@@ -106,8 +106,8 @@ print(mean_error)
 plt.figure()
 plt.loglog(n_agents_for_instance, mean_error, label="mean RMAE")
 plt.loglog(
-    np.linspace(10**2, 10**4, 100),
-    0.1 * np.power(np.linspace(10**2, 10**4, 100), -0.5),
+    np.linspace(10 ** 2, 10 ** 4, 100),
+    0.1 * np.power(np.linspace(10 ** 2, 10 ** 4, 100), -0.5),
     linestyle="--",
     label="$x^{-1/2}$ reference",
 )

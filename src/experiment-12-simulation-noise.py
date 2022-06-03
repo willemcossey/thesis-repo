@@ -27,7 +27,7 @@ def inv_dist(w, m, lam):
     else:
         res = (1 + w) ** (-2 + (m / (2 * lam)))
         res = res * (1 - w) ** (-2 - (m / (2 * lam)))
-        res = res * np.exp(-((1 - m * w) / (lam * (1 - w**2))))
+        res = res * np.exp(-((1 - m * w) / (lam * (1 - w ** 2))))
         return res
 
 

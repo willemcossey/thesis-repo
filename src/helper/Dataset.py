@@ -116,7 +116,7 @@ class Dataset:
                 **{"lmb": lmb, "mean_opinion": m, "theta_std": theta_std},
             }
             if self.meta["rng"] == "single":
-                ass["seed"] = random.randint(1, 2**32 - 1)
+                ass["seed"] = random.randint(1, 2 ** 32 - 1)
             dp = Datapoint(
                 dict(zip(self.meta["domain_bounds"].keys(), inp[:, n].tolist())), ass
             )

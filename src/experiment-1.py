@@ -24,7 +24,7 @@ print(f"theta_std = {theta_std}")
 def inv_dist(w, m, lam):
     res = (1 + w) ** (-2 + (m / (2 * lam)))
     res = res * (1 - w) ** (-2 - (m / (2 * lam)))
-    res = res * exp(-((1 - m * w) / (lam * (1 - w**2))))
+    res = res * exp(-((1 - m * w) / (lam * (1 - w ** 2))))
     return res
 
 
@@ -42,7 +42,7 @@ sim = SimulationJob(
     theta_std,
     lambda g, w: (1 - g) / (1 + abs(w)),
     lambda w: 1,
-    lambda w: (1 - w**2),  # P&T p. 241
+    lambda w: (1 - w ** 2),  # P&T p. 241
     mean_opinion,
     t_horiz,
     nagents,
