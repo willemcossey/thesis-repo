@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from helper.Dataset import Dataset
 import winsound
 from os import path
+from torch.utils.data import DataLoader
+import time
 
 # import dataset
 
@@ -24,9 +26,13 @@ y = torch.from_numpy(
 print(y[1, :])
 
 
+input_dim = x.shape[1]
+output_dim = y.shape[1]
 #%%
 
-x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
+transform_input = lambda x: (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
+
+x = transform_input(x)
 
 #%%
 visual = None
@@ -135,19 +141,19 @@ visual = None
 # visual = False
 # 2 64 samples 512 particles - 3l 150n 8000 e
 
-hyperparameters_configurations = {
-    "hidden_layers": [1, 2, 3],
-    "neurons": [50, 100, 150],
-    "regularization_exp": [2],
-    "regularization_param": [1e-4],
-    "batch_size": [n_samples],
-    "epochs": [2000, 4000, 8000],
-    "optimizer": ["ADAM"],
-    "init_weight_seed": [567],
-    "activation": ["tanh"],
-    "add_sftmax_layer": [False],
-}
-visual = False
+# hyperparameters_configurations = {
+#     "hidden_layers": [1, 2, 3],
+#     "neurons": [50, 100, 150],
+#     "regularization_exp": [2],
+#     "regularization_param": [1e-4],
+#     "batch_size": [n_samples],
+#     "epochs": [2000, 4000, 8000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
 # 2 64 samples 512 particles -
 
 # hyperparameters_configurations = {
@@ -166,19 +172,19 @@ visual = False
 # 6 - 3 layers, 8000 epochs - 12.6% test error
 # 6 - analytical test - 2l, 4000 - 21.8% t, 13 tr, 14 v
 
-# hyperparameters_configurations = {
-#     "hidden_layers": [2],
-#     "neurons": [200],
-#     "regularization_exp": [0],
-#     "regularization_param": [0],
-#     "batch_size": [n_samples],
-#     "epochs": [4000],
-#     "optimizer": ["ADAM"],
-#     "init_weight_seed": [568],
-#     "activation": ["tanh"],
-#     "add_sftmax_layer": [False],
-# }
-# visual = True
+hyperparameters_configurations = {
+    "hidden_layers": [2],
+    "neurons": [200],
+    "regularization_exp": [2],
+    "regularization_param": [0, 1e-4],
+    "batch_size": [n_samples],
+    "epochs": [4000],
+    "optimizer": ["ADAM"],
+    "init_weight_seed": [568],
+    "activation": ["tanh"],
+    "add_sftmax_layer": [False],
+}
+visual = False
 
 settings = list(itertools.product(*hyperparameters_configurations.values()))
 print(len(settings))
@@ -248,3 +254,77 @@ plt.grid(visible=True, which="both", axis="both")
 plt.show(block=True)
 
 #%% Train and save best model
+
+best_model_ind = np.argmin(test_err_conf)
+best_model = settings[best_model_ind]
+print(best_model)
+
+
+model = NeuralNet(
+    input_dimension=input_dim,
+    output_dimension=output_dim,
+    n_hidden_layers=best_model[0],
+    neurons=best_model[1],
+    regularization_param=best_model[3],
+    regularization_exp=best_model[2],
+    retrain_seed=best_model[7],
+    activation_name=best_model[8],
+    add_sftmax_layer=best_model[9],
+)
+
+optimizer_ = model.get_optimizer(best_model[6])
+
+n_epochs = best_model[5]
+
+batch_size = best_model[4]
+
+start_time = time.time()
+
+training_set = DataLoader(
+    torch.utils.data.TensorDataset(x, y), batch_size=best_model[4], shuffle=True
+)
+history = NeuralNet.fit(model, training_set, n_epochs, optimizer_, p=2, verbose=False)
+
+training_time = time.time() - start_time
+
+plt.grid(True, which="both", ls=":")
+plt.plot(np.arange(1, n_epochs + 1), np.log10(history[0]), label="Train Loss")
+plt.legend()
+
+#%%
+surrogate_model = model
+
+# Load testing data
+
+#%%
+x_test, y_test = NeuralNet.get_test_samples(1, y.shape[1])
+
+# Make prediction
+test_pred = surrogate_model.forward(transform_input(x_test)).detach()
+
+plt.figure()
+h = 2 / output_dim
+centers = [-1 + h / 2 + i * h for i in range(output_dim)]
+for i in range(x_test.shape[0]):
+    plt.plot(centers, test_pred[i, :], label="neural network prediction")
+    plt.plot(centers, y_test[i, :], label="simulation result")
+plt.legend()
+plt.show(block=True)
+
+#%% save and load model and make prediction again
+
+print(surrogate_model.state_dict())
+models_folder = path.join("src", "models")
+model_filename = f"nn-in-{input_dim}-out-{output_dim}-hid-{best_model[0]}-n-{best_model[1]}-activ-{best_model[8]}-regul-{best_model[3]}-{best_model[2]}-soft-{best_model[9]}-rng-{best_model[7]}-data-{dataset_name}-resol-{data.meta['experiment_assumptions']['n_samples']}-n_tr-{n_samples}-opt-{best_model[6]}-ep-{best_model[5]}-batch-{best_model[4]}-tr_time-{int(training_time)}.pt"
+torch.save(surrogate_model, path.join(models_folder, model_filename))
+
+#%%
+# loaded_model = torch.load(
+#     path.join(
+#         models_folder,
+#         "nn-in-2-out-20-hid-2-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-568-data-e3513ee46f1829cd90d7e07973b5e4f1.json-resol-512-n_tr-64-opt-ADAM-ep-4000-batch-64.pt",
+#     )
+# )
+loaded_model = torch.load(path.join(models_folder, model_filename))
+loaded_inference = loaded_model.forward(transform_input(x_test))
+print(torch.all(loaded_inference == test_pred))
