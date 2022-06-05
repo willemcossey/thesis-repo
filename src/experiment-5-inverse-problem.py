@@ -127,8 +127,8 @@ noise_std = args.noise_level
 noisy_observed_data = InverseProblem.add_noise(observed_data, noise_std)
 
 # solve inverse problem for this data
-problem = InverseProblem(noisy_observed_data, experiment_assumptions)
-samples = problem.solve(solver_settings)
+problem = InverseProblem(noisy_observed_data, experiment_assumptions, solver_settings)
+samples = problem.solve()
 
 
 output_file = os.path.join(
