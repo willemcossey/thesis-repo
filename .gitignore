@@ -8,3 +8,4 @@ src/datapoints/*
 src/datasets/*
 .spyproject/*
 src/raw-archive/*
+src/models/*
