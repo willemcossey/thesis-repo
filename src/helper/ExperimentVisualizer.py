@@ -58,7 +58,7 @@ class ExperimentVisualizer:
                 f.suptitle(
                     f"Estimated parameters for data with underlying lambda = {lmb} and m = {m} \n ensemble avgs: lambda = {np.mean(experiment_data['lmb'][num_burn_in:]): .2f}, m = {np.mean(experiment_data['m'][num_burn_in:]): .2f}"
                 )
-                # plt.show(block=True)
+                plt.show(block=True)
             if mode == "series":
                 f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
                 ax1.plot(
@@ -86,7 +86,7 @@ class ExperimentVisualizer:
                     f"Series of samples for data with underlying lambda = {lmb} and m = {m} \n ensemble avgs: lambda = {np.mean(experiment_data['lmb'][num_burn_in:]): .2f}, m = {np.mean(experiment_data['m'][num_burn_in:]): .2f}"
                 )
                 ax1.legend()
-                # plt.show(block=True)
+                plt.show(block=True)
 
         except IOError:
             print(f"Not found: {filename}")
