@@ -6,12 +6,14 @@ import matplotlib
 import matplotlib.pyplot as plt
 from os import path
 
+matplotlib.style.use(path.join("grayscale_adjusted.mplstyle"))
+
 # case: P = 1, D = 1-w^2
 
 # Parameter initialization
 lamb = 0.1
 mean_opinion = 0.5
-nagents = 10000
+nagents = 1000
 t_horiz = 200
 
 # theta_std = 0.1
@@ -25,7 +27,7 @@ print(f"theta_std = {theta_std}")
 def inv_dist(w, m, lam):
     res = (1 + w) ** (-2 + (m / (2 * lam)))
     res = res * (1 - w) ** (-2 - (m / (2 * lam)))
-    res = res * exp(-((1 - m * w) / (lam * (1 - w ** 2))))
+    res = res * exp(-((1 - m * w) / (lam * (1 - w**2))))
     return res
 
 
@@ -43,7 +45,7 @@ sim = SimulationJob(
     theta_std,
     lambda g, w: (1 - g) / (1 + abs(w)),
     lambda w: 1,
-    lambda w: (1 - w ** 2),  # P&T p. 241
+    lambda w: (1 - w**2),  # P&T p. 241
     mean_opinion,
     t_horiz,
     nagents,
@@ -62,20 +64,20 @@ mean_ref_result = np.mean(reference["g_inf(w)"])
 reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w)"]
 
 np.save(
-    path.join("experiment-data",f"experiment-1-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}"),
+    path.join(
+        "experiment-data",
+        f"experiment-1-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}",
+    ),
     sim.result,
 )
 
 # Generating figure
 plt.ion()
 fig = plt.figure()
-plt.bar(x=bins, height=counts, width=2 / len(bins))
-plt.plot(reference["w"], reference["g_inf(w)"], "r")
+plt.bar(x=bins, height=counts, width=2 / len(bins), color="gray")
+plt.plot(reference["w"], reference["g_inf(w)"])
 plt.suptitle(f"Steady Opinion Profile for P = 1 and D = 1- w^2")
 plt.title(f"lambda= {lamb}, n= {nagents} and {t_horiz} simulated time units")
 plt.xlabel("Opinion []")
 plt.ylabel("Count []")
 plt.show(block=True)
-cfm = plt.get_current_fig_manager()
-cfm.window.raise_()
-cfm.window.activateWindow()

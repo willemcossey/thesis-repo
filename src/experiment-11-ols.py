@@ -9,7 +9,7 @@ from os import path
 # import dataset
 
 data = Dataset.from_json(
-    path.join("src","datasets","7d0ca7a38db3c6cf84efa7bfa36e8a7e.json"), lazy=True
+    path.join("src", "datasets", "7d0ca7a38db3c6cf84efa7bfa36e8a7e.json"), lazy=True
 )
 
 n_samples = 1000

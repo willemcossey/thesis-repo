@@ -9,7 +9,7 @@ from os import path
 # import dataset
 
 data = Dataset.from_json(
-    path.join("src","datasets","19dd290bf11a4ff6ff8a74793d7f16ae.json"), lazy=True
+    path.join("src", "datasets", "19dd290bf11a4ff6ff8a74793d7f16ae.json"), lazy=True
 )
 
 print(data.meta)
@@ -28,7 +28,7 @@ def inv_dist(w, m, lam):
     else:
         res = (1 + w) ** (-2 + (m / (2 * lam)))
         res = res * (1 - w) ** (-2 - (m / (2 * lam)))
-        res = res * np.exp(-((1 - m * w) / (lam * (1 - w ** 2))))
+        res = res * np.exp(-((1 - m * w) / (lam * (1 - w**2))))
         return res
 
 

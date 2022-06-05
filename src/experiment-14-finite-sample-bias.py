@@ -1,13 +1,16 @@
 from helper.SimulationJob import SimulationJob
 import random
 import numpy as np
-from math import sqrt
+from math import sqrt, floor
 from os import path
 import subprocess
-
-# from copy import deepcopy
+import matplotlib as mpl
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import time
+from itertools import cycle
+
+mpl.style.use(path.join("src", "grayscale_adjusted.mplstyle"))
 
 seed = 42
 
@@ -18,7 +21,7 @@ n_parconfig = 3
 n_instances_per_parconfig = 10
 low_n_agents = 2
 high_n_agents = 4
-len_n_agents = 8
+len_n_agents = 3
 n_agents_for_instance = (
     np.round(
         np.power(
@@ -30,7 +33,7 @@ n_agents_for_instance = (
 )
 # n_agents_for_instance = [100,1000,10000]
 t_step = 10
-n_timesteps = 40
+n_timesteps = 60
 n_buckets = 20
 
 lmbs = np.linspace(0.1, 5, n_parconfig, endpoint=False)
@@ -54,7 +57,7 @@ for a in range(len(n_agents_for_instance)):
             latest_result = None
             for t in range(n_timesteps):
                 n_agents = n_agents_for_instance[a]
-                seed = random.randint(1, 2 ** 32 - 1)
+                seed = random.randint(1, 2**32 - 1)
                 lmb = lmbs[p]
                 m = ms[p]
                 gamma = 0.005
@@ -65,7 +68,7 @@ for a in range(len(n_agents_for_instance)):
                     theta_std,
                     lambda g, w: (1 - g) / (1 + abs(w)),
                     lambda w: 1,
-                    lambda w: (1 - w ** 2),  # P&T p. 241
+                    lambda w: (1 - w**2),  # P&T p. 241
                     m,
                     t_step,
                     n_agents,
@@ -87,7 +90,18 @@ for a in range(len(n_agents_for_instance)):
 git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
 filename_str = f"experiment-14-p-{n_parconfig}-i-{n_instances_per_parconfig}-a-{low_n_agents}-{high_n_agents}-{len_n_agents}-t-{t_step}-ts-{n_timesteps}-n-{n_buckets}-seed-{seed}-git-{git_label}"
 experiment_data_dir = path.join("src", "experiment-data")
+
+#%%
+
 np.savez(path.join(experiment_data_dir, f"{filename_str}.npz"), raw=result_list)
+
+#%%
+
+# file_to_load = filename_str
+file_to_load = "experiment-14-p-3-i-10-a-2-4-3-t-10-ts-60-n-20-seed-1112843405-git-exp-4-working-98-g4fb7ad0"
+
+f = np.load(path.join(experiment_data_dir, f"{file_to_load}.npz"))
+result_list = f["raw"]
 
 
 def inv_dist(w, m, lam):
@@ -97,7 +111,7 @@ def inv_dist(w, m, lam):
 
         res = np.power((1 + w), (-2 + (m / (2 * lam))))
         res = res * (1 - w) ** (-2 - (m / (2 * lam)))
-        res = res * np.exp(-((1 - m * w) / (lam * (1 - w ** 2))))
+        res = res * np.exp(-((1 - m * w) / (lam * (1 - w**2))))
         return res
 
 
@@ -106,7 +120,6 @@ def inv_dist_norm(c, m, lam):
     return y / (np.array(y).sum())
 
 
-#%%
 bias = []
 
 h = 2 / n_buckets
@@ -127,12 +140,18 @@ y_exact = [inv_dist(s, ms[p], lmbs[p]) for s in x]
 y_exact = y_exact / (np.array(y_exact).sum())
 
 plt.figure()
-for t in range(0, n_timesteps, 2):
+n_lines_in_plot = 4
+for t in range(0, n_timesteps, floor(n_timesteps / n_lines_in_plot)):
     plt.plot(centers, avg_data[t], label=f"t = {(t+1)*t_step}")
-plt.plot(x, y_exact, label=f"analytical solution", color="red", marker="o")
+plt.plot(x, y_exact, label=f"analytical solution", color="red")
 plt.legend()
 # plt.show()
-plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-1.png"))
+plt.savefig(
+    path.join(experiment_data_dir, f"{filename_str}-figure-1.png"),
+    bbox_inches="tight",
+    dpi=600,
+)
+
 
 #%% mean(mean solution wrt i - analytical solution) wrt p as a function of a for fixed t
 
@@ -147,23 +166,37 @@ for p in range(n_parconfig):
         for a in range(len(n_agents_for_instance)):
             for t in range(n_timesteps):
                 errors[a, p, i, t] = np.linalg.norm(
-                    data[a, p, i, t] - exact_solutions[p], 2
+                    data[a, p, i, t, :] - exact_solutions[p], 2
                 )
 
-err_agg = np.mean(errors, axis=(1, 2))
+err_agg = np.abs(np.mean(errors, axis=(1, 2)))
 
 plt.figure()
 if len_n_agents == 1:
     plt.loglog(
         n_agents_for_instance, err_agg[:, t], label=f"t = {(t+1)*t_step}", marker="o"
     )
-for t in range(0, n_timesteps, 2):
+n_lines_in_plot = 4
+step = 15
+# for t in range(n_timesteps-1, n_timesteps - (n_lines_in_plot)*step, -step):
+for t in range(9, 10):
     plt.loglog(n_agents_for_instance, err_agg[:, t], label=f"t = {(t+1)*t_step}")
+plt.loglog(
+    np.power(10, np.linspace(2, 4, 8)),
+    2 * 1e-1 * np.power(np.power(10, np.linspace(2, 4, 8)), -0.1),
+    label="$1/(n^{10})$ reference",
+    linestyle="--",
+)
 plt.legend()
 plt.xlabel("#particles simulated")
 plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
 # plt.show()
-plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-2.png"))
+# plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-2.png"),bbox_inches='tight',dpi=600)
+plt.savefig(
+    path.join(experiment_data_dir, f"{filename_str}-figure-2-time-{time.time()}.png"),
+    bbox_inches="tight",
+    dpi="figure",
+)
 
 #%% mean wrt i as a function of t for fixed a
 
@@ -201,8 +234,11 @@ plt.legend()
 plt.xlabel("simulated time")
 plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
 # plt.show()
-plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-3.png"))
-
+plt.savefig(
+    path.join(experiment_data_dir, f"{filename_str}-figure-3.png"),
+    bbox_inches="tight",
+    dpi=600,
+)
 
 #%%
 
@@ -236,11 +272,15 @@ plt.fill_between(
     color="black",  # The outline color
     alpha=0.2,
 )
-plt.plot([(t + 1) * t_step for t in range(n_timesteps)], err_mean, color="red")
+plt.plot([(t + 1) * t_step for t in range(n_timesteps)], err_mean)
 plt.xlabel("simulated time")
 plt.ylabel("$|avg solution - analytical solution|_{L^2}$")
 # plt.show()
-plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-4.png"))
+plt.savefig(
+    path.join(experiment_data_dir, f"{filename_str}-figure-4.png"),
+    bbox_inches="tight",
+    dpi=600,
+)
 
 
 #%%
@@ -262,6 +302,9 @@ for p in range(n_parconfig):
 
 a = -1
 
+lines = ["-", "--", "-.", ":"]
+linecycler = cycle(lines)
+
 
 plt.figure()
 for p in range(n_parconfig):
@@ -273,11 +316,20 @@ for p in range(n_parconfig):
         err_lower_conf,
         err_upper_conf,  # The outline color
         alpha=0.2,
+    )
+    plt.plot(
+        [(t + 1) * t_step for t in range(n_timesteps)],
+        err_mean,
+        linestyle=next(linecycler),
+        color="black",
         label=f"m={ms[p]:.2f}, lmb={lmbs[p]:.2f}",
     )
-    plt.plot([(t + 1) * t_step for t in range(n_timesteps)], err_mean, color="red")
 plt.xlabel("simulated time")
-plt.ylabel("$|avg solution - analytical solution|_{L^2}$")
+plt.ylabel(r"$\mathbb{E}(\Vert\hat{f}(\theta,t) - f(\theta)\Vert_{L^2}$)")
 plt.legend()
 # plt.show()
-plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-5.png"))
+plt.savefig(
+    path.join(experiment_data_dir, f"{filename_str}-figure-5.png"),
+    bbox_inches="tight",
+    dpi=600,
+)

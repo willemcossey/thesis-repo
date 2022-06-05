@@ -62,7 +62,10 @@ reference["g_inf(w)"] = (mean_sim_result / mean_ref_result) * reference["g_inf(w
 
 
 np.save(
-    path.join("experiment-data",f"experiment-2-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}"),
+    path.join(
+        "experiment-data",
+        f"experiment-2-lambda-{lamb}-nagents-{nagents}-t-horiz-{t_horiz}",
+    ),
     sim.result,
 )
 

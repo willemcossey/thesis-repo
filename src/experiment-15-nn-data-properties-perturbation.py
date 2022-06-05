@@ -7,6 +7,11 @@ from os import path
 from itertools import chain
 from time import time
 import subprocess
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from itertools import cycle
+
+mpl.style.use(path.join("src", "grayscale_adjusted.mplstyle"))
 
 
 # after having chosen hyper parameters for certain low data quality and low data quantity -> low variance, high bias regime
@@ -17,9 +22,15 @@ import subprocess
 
 ## Specify datasets to be used
 dataset_name_list = [
-    "4f0d31c5c84e0988848b9fb476927585.json",
-    "2d3d0ea6f837d4536fb4742d66cb5de4.json",
+    "319776cb4e97f15bb36c924827d0cbcb.json",
+    "e3513ee46f1829cd90d7e07973b5e4f1.json",
+    "ecf985c1bc7f60f2e6895254c925f882.json",
+    "7d0ca7a38db3c6cf84efa7bfa36e8a7e.json",
+    "8aef15d64f53b52a4735756a4fe868bf.json",
 ]
+
+#%%
+
 dataset_list = [
     Dataset.from_json(path.join("src", "datasets", d)) for d in dataset_name_list
 ]
@@ -37,7 +48,7 @@ min_size = np.min(dataset_df["size"])
 # Specify number of training samples to be investigated
 n_training_list = list(
     np.array(
-        64 * np.power(2, np.arange(-3, min(5, np.log2(min_size) - 6) + 1)), dtype=int
+        64 * np.power(2, np.arange(0, min(5, np.log2(min_size) - 6) + 1)), dtype=int
     )
 )
 
@@ -49,18 +60,19 @@ test_err_conf = list()
 ## Specify network architecture to be used.
 
 nn_arch = {
-    "hidden_layers": 2,
-    "neurons": 100,
+    "hidden_layers": 3,
+    "neurons": 150,
     "regularization_exp": 2,
-    "regularization_param": 0,
+    "regularization_param": 1e-4,
     "batch_size": None,
-    "epochs": 2,
+    "epochs": 8000,
     "optimizer": "ADAM",
     "init_weight_seed": 42,
     "activation": "tanh",
     "add_sftmax_layer": False,
 }
 
+#%%
 
 col = [
     list(nn_arch.keys()),
@@ -121,9 +133,46 @@ print(result_df.columns)
 result_df.drop("objects", axis=1, inplace=True)
 result_df.reset_index(drop=True, inplace=True)
 
+#%%
+
 git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
-max_size = max(dataset_sizes)
+min_n_train = min(n_training_list)
+max_n_train = max(n_training_list)
 min_resolution = min(dataset_resolutions)
 max_resolution = max(dataset_resolutions)
-name_string = f"experiment-15-size--{min_size}-{max_size}--resolution--{min_resolution}-{max_resolution}--git-{git_label}-time-{time()}.csv"
-result_df.to_csv(path.join("src", "experiment-data", name_string))
+name_string = f"experiment-15-size--{min_n_train}-{max_n_train}--resolution--{min_resolution}-{max_resolution}--git-{git_label}-time-{time()}.csv"
+# result_df.to_csv(path.join("src", "experiment-data", name_string))
+print(f"saved at {path.join('src', 'experiment-data', name_string)}")
+
+
+#%%
+
+result_df = pd.read_csv(path.join("src", "experiment-data", name_string))
+# result_df = pd.read_csv(path.join("src", "experiment-data", "experiment-15-size--64-2048--resolution--32-16384--git-exp-4-working-98-g4fb7ad0-time-1654426261.325137.csv"))
+
+print(result_df)
+print(result_df.columns)
+
+#%%
+
+
+resolutions = sorted(set(result_df["resolution"]))
+
+lines = ["-", "--", "-."]
+linecycler = cycle(lines)
+
+plt.figure()
+for r in resolutions:
+    df_res = result_df[result_df["resolution"] == r].sort_values("n train samples")
+    print(r)
+    print(df_res.loc[:, ["n train samples", "test err"]])
+    plt.semilogx(
+        df_res["n train samples"],
+        df_res["test err"],
+        linestyle=next(linecycler),
+        label=f"{r} particles",
+    )
+plt.xlabel("# training samples")
+plt.ylabel("test error")
+plt.legend()
+plt.show()
