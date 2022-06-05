@@ -9,13 +9,13 @@ from os import path
 
 # import dataset
 
-data = Dataset.from_json(
-    path.join("src","datasets","7d0ca7a38db3c6cf84efa7bfa36e8a7e.json"), lazy=True
-)
+# dataset_name = "7d0ca7a38db3c6cf84efa7bfa36e8a7e.json"
+dataset_name = "e3513ee46f1829cd90d7e07973b5e4f1.json"
+data = Dataset.from_json(path.join("src", "datasets", dataset_name), lazy=True)
 
 # data.compute_aggregated_output(20)
 
-n_samples = 1000
+n_samples = 64
 #%%
 x = torch.from_numpy(data.get_inputs(end=n_samples, silent=False)).to(torch.float)
 y = torch.from_numpy(
@@ -45,21 +45,21 @@ visual = None
 # }
 
 # linear output
-# #mlp-1 max dimensions
+# #1 1000samples 10 000 particles - max dimensions
 
-hyperparameters_configurations = {
-    "hidden_layers": [1],
-    "neurons": [40, 60, 100],
-    "regularization_exp": [2],
-    "regularization_param": [0, 1e-4],
-    "batch_size": [100],
-    "epochs": [200, 500, 1000],
-    "optimizer": ["ADAM"],
-    "init_weight_seed": [567, 134, 124],
-    "activation": ["tanh"],
-    "add_softmax": ["False"],
-}
-# #2 max dimensions, no regularization
+# hyperparameters_configurations = {
+#     "hidden_layers": [1],
+#     "neurons": [40, 60, 100],
+#     "regularization_exp": [2],
+#     "regularization_param": [0, 1e-4],
+#     "batch_size": [100],
+#     "epochs": [200, 500, 1000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567, 134, 124],
+#     "activation": ["tanh"],
+#     "add_softmax": ["False"],
+# }
+# #2 1000samples 10 000 particles - max dimensions, no regularization
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [1],
@@ -78,33 +78,77 @@ hyperparameters_configurations = {
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [1],
-#     "neurons": [100, 200],
+#     "neurons": [100, 200, 400],
 #     "regularization_exp": [2],
 #     "regularization_param": [0],
 #     "batch_size": [n_samples],
-#     "epochs": [2000, 3000, 4000],
+#     "epochs": [2000, 4000, 8000],
 #     "optimizer": ["ADAM"],
-#     "init_weight_seed": [567, 134, 124],
+#     "init_weight_seed": [567],
 #     "activation": ["tanh"],
-#     "add_sftmax_layer": [False],
+#     "add_softmax": [False],
 # }
-# visual = True
-# #4
+# #4 1000samples 10 000 particles- n 100, e 8000 - 19.72% test error
 
 # hyperparameters_configurations = {
-#     "hidden_layers": [1,2,3,4],
-#     "neurons": [200],
+#     "hidden_layers": [1,2,3],
+#     "neurons": [50, 100, 150],
 #     "regularization_exp": [2],
 #     "regularization_param": [0],
 #     "batch_size": [n_samples],
-#     "epochs": [2000, 4000],
+#     "epochs": [2000, 4000, 8000],
 #     "optimizer": ["ADAM"],
 #     "init_weight_seed": [567],
 #     "activation": ["tanh"],
 #     "add_sftmax_layer": [False],
 # }
 # visual = False
-# #5 - 2 layers, 4000 epochs - 14.8% test error
+# 5 1000samples 10 000 particles - 1 layers, 100 neurons, 8000 epochs - 19.72% test error
+
+# hyperparameters_configurations = {
+#     "hidden_layers": [1,2,3],
+#     "neurons": [50, 100, 150],
+#     "regularization_exp": [2],
+#     "regularization_param": [0],
+#     "batch_size": [n_samples],
+#     "epochs": [2000, 4000, 8000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
+# 1 64 samples 512 particles - 1l 100n 4000e 28.838% (runner up:  3l 150 n 2000 ep 29.1%)
+
+# hyperparameters_configurations = {
+#     "hidden_layers": [1,2,3],
+#     "neurons": [50, 100, 150],
+#     "regularization_exp": [2],
+#     "regularization_param": [1e-4],
+#     "batch_size": [n_samples],
+#     "epochs": [2000, 4000, 8000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
+# 2 64 samples 512 particles - 3l 150n 8000 e
+
+hyperparameters_configurations = {
+    "hidden_layers": [1, 2, 3],
+    "neurons": [50, 100, 150],
+    "regularization_exp": [2],
+    "regularization_param": [1e-4],
+    "batch_size": [n_samples],
+    "epochs": [2000, 4000, 8000],
+    "optimizer": ["ADAM"],
+    "init_weight_seed": [567],
+    "activation": ["tanh"],
+    "add_sftmax_layer": [False],
+}
+visual = False
+# 2 64 samples 512 particles -
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [2, 3, 4],
