@@ -130,11 +130,11 @@ class NeuralNet(nn.Module):
     def fit(
         model,
         training_set,
-        x_validation_,
-        y_validation_,
         num_epochs,
         optimizer,
         p,
+        x_validation_=None,
+        y_validation_=None,
         verbose=True,
     ):
         history = [[], []]
@@ -178,29 +178,46 @@ class NeuralNet(nn.Module):
                     return loss
 
                 optimizer.step(closure=closure)
-
-            y_validation_pred_ = model(x_validation_)
-            validation_loss = torch.mean(
-                (
-                    y_validation_pred_.reshape(
-                        -1,
+            validation_loss = None
+            if x_validation_ is not None:
+                y_validation_pred_ = model(x_validation_)
+                validation_loss = torch.mean(
+                    (
+                        y_validation_pred_.reshape(
+                            -1,
+                        )
+                        - y_validation_.reshape(
+                            -1,
+                        )
                     )
-                    - y_validation_.reshape(
-                        -1,
-                    )
-                )
-                ** p
-            ).item()
+                    ** p
+                ).item()
+                history[1].append(validation_loss)
             history[0].append(running_loss[0])
-            history[1].append(validation_loss)
-
-            if verbose:
-                print("Training Loss: ", np.round(running_loss[0], 8))
-                print("Validation Loss: ", np.round(validation_loss, 8))
+        if verbose:
+            print("Training Loss: ", np.round(running_loss[0], 8))
+            print("Validation Loss: ", np.round(validation_loss, 8))
 
         print("Final Training Loss: ", np.round(history[0][-1], 8))
-        print("Final Validation Loss: ", np.round(history[1][-1], 8))
+        if x_validation_ is not None:
+            print("Final Validation Loss: ", np.round(history[1][-1], 8))
         return history
+
+    def get_optimizer(self, opt_type):
+        if opt_type == "ADAM":
+            optimizer_ = torch.optim.Adam(self.parameters(), lr=0.001)
+            return optimizer_
+        elif opt_type == "LBFGS":
+            optimizer_ = optim.LBFGS(
+                self.parameters(),
+                lr=0.1,
+                max_iter=1,
+                max_eval=50000,
+                tolerance_change=1.0 * np.finfo(float).eps,
+            )
+            return optimizer_
+        else:
+            raise ValueError("Optimizer not recognized")
 
     @staticmethod
     def train_single_configuration(conf_dict, x_, y_, visual_check=None):
@@ -264,27 +281,16 @@ class NeuralNet(nn.Module):
             add_sftmax_layer=add_sftmax_layer,
         )
 
-        if opt_type == "ADAM":
-            optimizer_ = torch.optim.Adam(my_network.parameters(), lr=0.001)
-        elif opt_type == "LBFGS":
-            optimizer_ = optim.LBFGS(
-                my_network.parameters(),
-                lr=0.1,
-                max_iter=1,
-                max_eval=50000,
-                tolerance_change=1.0 * np.finfo(float).eps,
-            )
-        else:
-            raise ValueError("Optimizer not recognized")
+        optimizer_ = my_network.get_optimizer(opt_type)
 
         history = NeuralNet.fit(
             my_network,
             training_set,
-            x_val,
-            y_val,
             n_epochs,
             optimizer_,
             p=2,
+            x_validation_=x_val,
+            y_validation_=y_val,
             verbose=False,
         )
 
