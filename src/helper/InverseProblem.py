@@ -1,32 +1,37 @@
 from helper.Distribution import Uniform, Normal
-from helper.Likelihood import SimulationLikelihood
+from helper.Likelihood import SimulationLikelihood, NNLikelihood
 from tqdm import tqdm
 import numpy as np
 
 
 class InverseProblem:
-    def __init__(self, observed_data, experiment_assumptions):
+    def __init__(self, observed_data, experiment_assumptions, solver_settings):
         self.observed_data = observed_data
         self.experiment_assumptions = experiment_assumptions
         self.prior_dict = dict(
             lmb=Uniform(0, self.experiment_assumptions["lmb_bound"]), m=Uniform(-1, 1)
         )
+        self.solver_settings = solver_settings
 
         # Solve inverse problem by Posterior Sampling using Metropolis Hastings
 
-    def solve(self, solver_settings):
+    def solve(self):
 
         # establish old sample Prior x LH
-        current_sample = solver_settings["initial_sample"]
+        current_sample = self.solver_settings["initial_sample"]
         current_sample_post_value = self._evaluate_post_value(current_sample)
 
         resulting_samples = dict(lmb=[current_sample["lmb"]], m=[current_sample["m"]])
         resulting_post_values = [current_sample_post_value]
 
         for n in tqdm(
-            range(0, solver_settings["num_rounds"] + solver_settings["num_burn_in"])
+            range(
+                0,
+                self.solver_settings["num_rounds"]
+                + self.solver_settings["num_burn_in"],
+            )
         ):
-            proposal = self._propose_new_sample(current_sample, solver_settings)
+            proposal = self._propose_new_sample(current_sample)
             current_sample, current_sample_post_value = self._determine_new_sample(
                 proposal, current_sample, current_sample_post_value
             )
@@ -42,13 +47,13 @@ class InverseProblem:
             "m"
         ].evaluate(sample["m"])
 
-    def _propose_new_sample(self, old_sample, solver_settings):
+    def _propose_new_sample(self, old_sample):
         assert self._sound_sample(old_sample)
         new_sample = old_sample.copy()
         for key in old_sample.keys():
             new_sample[key] = (
                 new_sample[key]
-                + Normal(0, solver_settings["proposal_std"][key]).sample()[0]
+                + Normal(0, self.solver_settings["proposal_std"][key]).sample()[0]
             )
         return new_sample
 
@@ -58,10 +63,17 @@ class InverseProblem:
         if prior == 0:
             return prior
         else:
-            lh = SimulationLikelihood(
-                self.observed_data, sample, self.experiment_assumptions
-            ).evaluate()
-            return prior * lh
+
+            if self.solver_settings["lh_type"] == "nn":
+                lh = NNLikelihood(
+                    self.observed_data, sample, self.experiment_assumptions
+                )
+            else:
+                lh = SimulationLikelihood(
+                    self.observed_data, sample, self.experiment_assumptions
+                )
+            lh_value = lh.evaluate()
+            return prior * lh_value
 
     def _determine_new_sample(self, new_sample, old_sample, old_sample_post_value):
 
