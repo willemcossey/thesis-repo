@@ -141,7 +141,7 @@ max_n_train = max(n_training_list)
 min_resolution = min(dataset_resolutions)
 max_resolution = max(dataset_resolutions)
 name_string = f"experiment-15-size--{min_n_train}-{max_n_train}--resolution--{min_resolution}-{max_resolution}--git-{git_label}-time-{time()}.csv"
-# result_df.to_csv(path.join("src", "experiment-data", name_string))
+result_df.to_csv(path.join("src", "experiment-data", name_string))
 print(f"saved at {path.join('src', 'experiment-data', name_string)}")
 
 
