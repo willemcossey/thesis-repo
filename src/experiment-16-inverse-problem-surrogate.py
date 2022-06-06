@@ -139,7 +139,7 @@ noisy_observed_data = InverseProblem.add_noise(observed_data, noise_std)
 
 # solve inverse problem for this data
 problem = InverseProblem(noisy_observed_data, experiment_assumptions, solver_settings)
-samples = problem.solve()
+samples = problem.solve(silent=True)
 
 
 output_file = os.path.join(
@@ -158,4 +158,5 @@ if args.show:
         underlyng_lmb,
         underlying_m,
         mode="series",
+        block=False,
     )

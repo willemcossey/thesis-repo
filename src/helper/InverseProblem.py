@@ -15,7 +15,7 @@ class InverseProblem:
 
         # Solve inverse problem by Posterior Sampling using Metropolis Hastings
 
-    def solve(self):
+    def solve(self, silent=False):
 
         # establish old sample Prior x LH
         current_sample = self.solver_settings["initial_sample"]
@@ -29,7 +29,8 @@ class InverseProblem:
                 0,
                 self.solver_settings["num_rounds"]
                 + self.solver_settings["num_burn_in"],
-            )
+            ),
+            disable=silent,
         ):
             proposal = self._propose_new_sample(current_sample)
             current_sample, current_sample_post_value = self._determine_new_sample(
