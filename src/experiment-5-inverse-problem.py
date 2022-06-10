@@ -75,13 +75,32 @@ parser.add_argument(
     help="random number generator seed to be used",
 )
 parser.add_argument("--show", action="store_true")
-
+parser.add_argument(
+    "-lh",
+    "--likelihood-type",
+    dest="lh_type",
+    type=str,
+    choices=["sim", "nn"],
+    default="sim",
+    help="Argument specifying whether simulation likelihood should be used or neural net likelihood.",
+)
+parser.add_argument(
+    "-loc",
+    "--nn-loc",
+    dest="nn_loc",
+    type=str,
+    default=None,
+    help="Specify file location of the NN surrogate model to be used.",
+)
 args = parser.parse_args()
 
 if args.seed is None:
-    seed = random.randint(1, 2 ** 32 - 1)
+    seed = random.randint(1, 2**32 - 1)
 else:
     seed = args.seed
+
+if args.lh_type == "nn" and args.nn_loc is None:
+    raise ValueError
 
 random.seed(seed)
 np.random.seed(seed)
@@ -94,7 +113,7 @@ experiment_assumptions = dict(
     gamma=gamma,
     lmb_bound=(1 / (3 * gamma) - 2 / 3 + gamma / 3),
     p=lambda w: 1,
-    d=lambda w: (1 - w ** 2),
+    d=lambda w: (1 - w**2),
     t_horiz=args.t_horiz,
     nagents=args.nagents,
 )
@@ -106,6 +125,7 @@ solver_settings = dict(
     num_burn_in=args.burn,
     initial_sample=dict(lmb=0.5, m=-0.5),
     proposal_std=dict(lmb=proposal_step_size, m=proposal_step_size),
+    lh_type="sim",
 )
 
 synth_data_file = args.filename
