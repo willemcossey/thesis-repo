@@ -147,8 +147,14 @@ print(f"saved at {path.join('src', 'experiment-data', name_string)}")
 
 #%%
 
-result_df = pd.read_csv(path.join("src", "experiment-data", name_string))
-# result_df = pd.read_csv(path.join("src", "experiment-data", "experiment-15-size--64-2048--resolution--32-16384--git-exp-4-working-98-g4fb7ad0-time-1654426261.325137.csv"))
+# result_df = pd.read_csv(path.join("src", "experiment-data", name_string))
+result_df = pd.read_csv(
+    path.join(
+        "src",
+        "experiment-data",
+        "experiment-15-size--64-2048--resolution--32-16384--git-exp-4-working-98-g4fb7ad0-time-1654426261.325137.csv",
+    )
+)
 
 print(result_df)
 print(result_df.columns)
@@ -158,21 +164,26 @@ print(result_df.columns)
 
 resolutions = sorted(set(result_df["resolution"]))
 
-lines = ["-", "--", "-."]
-linecycler = cycle(lines)
 
-plt.figure()
+f = plt.figure()
 for r in resolutions:
     df_res = result_df[result_df["resolution"] == r].sort_values("n train samples")
     print(r)
     print(df_res.loc[:, ["n train samples", "test err"]])
     plt.semilogx(
         df_res["n train samples"],
-        df_res["test err"],
-        linestyle=next(linecycler),
+        df_res["test err MRAE"],
         label=f"{r} particles",
     )
 plt.xlabel("# training samples")
 plt.ylabel("test error")
 plt.legend()
 plt.show()
+
+f.savefig(
+    path.join(
+        "src",
+        "experiment-data",
+        "experiment-15-size--64-2048--resolution--32-16384--git-exp-4-working-98-g4fb7ad0-time-1654426261.325137.eps",
+    )
+)

@@ -34,6 +34,8 @@ print(f"""mean rel abs error train: {mean_rel_abs_error}""")
 
 #%%
 n_test_samples = 1000
+
+
 x_test = torch.from_numpy(
     data.get_inputs(start=n_samples, end=n_samples + n_test_samples)
 ).to(torch.float)
@@ -51,6 +53,10 @@ mean_rel_abs_error_test = torch.mean(abs(y_test - y_test_pred)) / torch.mean(y_t
 print(f"""RMSE test set: {RMSE_test}""")
 print(f"""mean rel abs error test set: {mean_rel_abs_error_test}""")
 
+#%%
+experiment_name_str = (
+    f"experiment-11-{data.name}-n_samples-{n_samples}-n_test_samples-{n_test_samples}"
+)
 
 #%%
 
@@ -67,10 +73,21 @@ for l in range(0, length):
 n_bucket = 2
 fig = plt.figure()
 ax = plt.axes(projection="3d")
-ax.scatter(x[:, 0], x[:, 1], y[:, width * l + w], marker="o")
-ax.scatter(x[:, 0], x[:, 1], y_pred[:, width * l + w], marker="x")
+ax.scatter(x[:, 0], x[:, 1], y[:, width * l + w], "o", color="r")
+ax.scatter(x[:, 0], x[:, 1], y_pred[:, width * l + w], "x", color="b")
 plt.xlabel("lambda")
 plt.ylabel("mean opininion")
 plt.legend(
     [f"Histogram height bucket #{width*l+w+1}", "Linear Regression approximation"]
 )
+
+error = y - y_pred
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+ax.scatter(x[:, 0], x[:, 1], error[:, width * l + w], "o", color="b")
+ax.scatter(np.zeros(x[:, 0].shape), x[:, 1], error[:, width * l + w], ".")
+ax.scatter(x[:, 0], np.ones(x[:, 1].shape), error[:, width * l + w], ".")
+plt.xlabel("lambda")
+plt.ylabel("mean opininion")
+ax.set_zlabel("$y - \hat{y}$)")
+fig.savefig(path.join("src", "experiment-data", f"{experiment_name_str}-error.eps"))

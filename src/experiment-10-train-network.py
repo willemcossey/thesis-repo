@@ -291,40 +291,62 @@ plt.grid(True, which="both", ls=":")
 plt.plot(np.arange(1, n_epochs + 1), np.log10(history[0]), label="Train Loss")
 plt.legend()
 
+model_filename = f"nn-in-{input_dim}-out-{output_dim}-hid-{best_model[0]}-n-{best_model[1]}-activ-{best_model[8]}-regul-{best_model[3]}-{best_model[2]}-soft-{best_model[9]}-rng-{best_model[7]}-data-{dataset_name}-resol-{data.meta['experiment_assumptions']['n_samples']}-n_tr-{n_samples}-opt-{best_model[6]}-ep-{best_model[5]}-batch-{best_model[4]}-tr_time-{int(training_time)}.pt"
+
 #%%
 surrogate_model = model
+
 
 # Load testing data
 
 #%%
-x_test, y_test = NeuralNet.get_test_samples(1, y.shape[1])
+x_test, y_test = NeuralNet.get_test_samples(10, y.shape[1])
 
 # Make prediction
+# test_pred = surrogate_model.forward(
+#     transform_input(
+#         torch.tensor(
+#             [
+#                 [1, 0],
+#             ]
+#         )
+#     )
+# ).detach()
+
 test_pred = surrogate_model.forward(transform_input(x_test)).detach()
 
-plt.figure()
 h = 2 / output_dim
 centers = [-1 + h / 2 + i * h for i in range(output_dim)]
 for i in range(x_test.shape[0]):
+    f = plt.figure()
     plt.plot(centers, test_pred[i, :], label="neural network prediction")
     plt.plot(centers, y_test[i, :], label="simulation result")
-plt.legend()
-plt.show(block=True)
+    plt.legend()
+    plt.xlabel("Opinion $w$")
+    plt.ylabel("$P_T(w)$")
+    plt.title(f"$\lambda$ = {x[i,0]:.2f} $m$ = {x[i,1]:.2f}")
+    plt.show(block=True)
+    prediction_name_str = f"experiment-10-pred-result-{model_filename}-input-{x[i,0]:.2f}-{x[i,1]:.2f}.png"
+    f.savefig(path.join("src", "experiment-data", prediction_name_str))
+
 
 #%% save and load model and make prediction again
 
 print(surrogate_model.state_dict())
 models_folder = path.join("src", "models")
-model_filename = f"nn-in-{input_dim}-out-{output_dim}-hid-{best_model[0]}-n-{best_model[1]}-activ-{best_model[8]}-regul-{best_model[3]}-{best_model[2]}-soft-{best_model[9]}-rng-{best_model[7]}-data-{dataset_name}-resol-{data.meta['experiment_assumptions']['n_samples']}-n_tr-{n_samples}-opt-{best_model[6]}-ep-{best_model[5]}-batch-{best_model[4]}-tr_time-{int(training_time)}.pt"
 torch.save(surrogate_model, path.join(models_folder, model_filename))
 
 #%%
-# loaded_model = torch.load(
-#     path.join(
-#         models_folder,
-#         "nn-in-2-out-20-hid-2-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-568-data-e3513ee46f1829cd90d7e07973b5e4f1.json-resol-512-n_tr-64-opt-ADAM-ep-4000-batch-64.pt",
-#     )
-# )
+
+
+model_filename = "nn-in-2-out-20-hid-2-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-568-data-e3513ee46f1829cd90d7e07973b5e4f1.json-resol-512-n_tr-64-opt-ADAM-ep-4000-batch-64.pt"
+
+loaded_model = torch.load(
+    path.join(
+        models_folder,
+        model_filename,
+    )
+)
 loaded_model = torch.load(path.join(models_folder, model_filename))
 loaded_inference = loaded_model.forward(transform_input(x_test))
 print(torch.all(loaded_inference == test_pred))

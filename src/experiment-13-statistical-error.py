@@ -96,6 +96,19 @@ filename_str = f"experiment-13-p-{n_parconfig}-i-{n_instances_per_parconfig}-a-{
 experiment_data_dir = path.join("src", "experiment-data")
 np.savez(path.join(experiment_data_dir, f"{filename_str}.npz"), errors=errors)
 
+#%%
+
+# f = np.load(path.join(experiment_data_dir, f"{filename_str}.npz"))
+f = np.load(
+    path.join(
+        experiment_data_dir,
+        f"experiment-14-p-3-i-100-a-2-2-1-t-10-ts-60-n-20-seed-3540192740-git-exp-4-working-98-g4fb7ad0.npz",
+    )
+)
+errors = f["errors"]
+
+#%%
+
 mean_error = [
     np.mean([errors[a, p] for p in range(n_parconfig)])
     for a in range(len(n_agents_for_instance))
@@ -112,10 +125,10 @@ plt.loglog(
     label="$x^{-1/2}$ reference",
 )
 plt.xlabel("#particles simulated")
-plt.ylabel("mean standard deviation")
-plt.title(
-    f"#configurations = {n_parconfig}, #repetitions = {n_instances_per_parconfig}, #buckets = {n_buckets}"
-)
+plt.ylabel("Relative Mean Absolute error")
+# plt.title(
+#     f"#configurations = {n_parconfig}, #repetitions = {n_instances_per_parconfig}, #buckets = {n_buckets}"
+# )
 plt.legend()
 # plt.show(block=True)
 plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-1.png"))

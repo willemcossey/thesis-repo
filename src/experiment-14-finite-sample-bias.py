@@ -184,7 +184,7 @@ for t in range(9, 10):
 plt.loglog(
     np.power(10, np.linspace(2, 4, 8)),
     2 * 1e-1 * np.power(np.power(10, np.linspace(2, 4, 8)), -0.1),
-    label="$1/(n^{10})$ reference",
+    label="$n^{-1/10}$ reference",
     linestyle="--",
 )
 plt.legend()
