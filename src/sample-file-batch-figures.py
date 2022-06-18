@@ -3,25 +3,13 @@ from os import path
 
 pathdict = dict(
     paths=[
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.1-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.01-0.01--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.01-n_observations-50-num_rounds-6000-burn_in-1000-proposal--0.05-0.05--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.1-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.05-0.05--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-1.0-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.05-0.05--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.01-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.1-0.1--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.01-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.05-0.05--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.1-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.1-0.1--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-1.0-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.1-0.1--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
-        "experiment-16--synth-data-lmb-1.0-m-0.0-t_horiz-200-nagents-10000.npy--noise-0.01-n_observations-25-num_rounds-6000-burn_in-1000-proposal--0.01-0.01--initial_sample--1.5--0.2-nn-nn-start-27576812-seed-64.npz",
+        "experiment-5-inverse-problem-from--synth-data-lmb-0.1-m-0.5-t_horiz-200-nagents-10000.npy--noise_std-0.1-n_observations-100-num_rounds-600-burn_in-300-proposal_std--0.01-0.01--initial_sample--0.5--0.5--t_horiz-100-nagents-1000_1646410274.npz",
+        "experiment-5-inverse-problem-from--synth-data-lmb-0.1-m-0.5-t_horiz-200-nagents-10000.npy--noise_std-0.1-n_observations-100-num_rounds-600-burn_in-300-proposal_std--0.05-0.05--initial_sample--0.5--0.5--t_horiz-100-nagents-1000_1646410258.npz",
+        "experiment-5-inverse-problem-from--synth-data-lmb-0.1-m-0.5-t_horiz-200-nagents-10000.npy--noise_std-0.1-n_observations-100-num_rounds-600-burn_in-300-proposal_std--0.1-0.1--initial_sample--0.5--0.5--t_horiz-100-nagents-1000_1646410235.npz",
     ],
-    m=[
-        0,
-    ]
-    * 9,
-    l=[
-        1,
-    ]
-    * 9,
-    b=[1000] * 9,
+    l=[0.1] * 3,
+    m=[0.5] * 3,
+    b=[300] * 3,
 )
 
 
@@ -29,10 +17,17 @@ print(
     len(pathdict["paths"]), len(pathdict["m"]), len(pathdict["l"]), len(pathdict["b"])
 )
 
-in_path = path.join("experiment-data")
+in_path = path.join(
+    "src", "experiment-data", "inverse-validation-exp3~proposal", "data"
+)
 
 for i in range(len(pathdict["paths"])):
-    out_path = path.join("experiment-data", "surrogate-inverse-validation")
+    out_path = path.join(
+        "src",
+        "experiment-data",
+        "inverse-validation-exp3~proposal",
+        "selected",
+    )
     f = ExperimentVisualizer.from_samples_file(
         path.join(in_path, pathdict["paths"][i]),
         pathdict["b"][i],

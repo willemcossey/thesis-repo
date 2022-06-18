@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from os import path
 
-mpl.style.use(path.join("..", "src", "grayscale_adjusted.mplstyle"))
+mpl.style.use(path.join("src", "grayscale_adjusted.mplstyle"))
+mpl.rcParams["xtick.labelsize"] = 10
 
 # load an experiment from experiment-data
 
@@ -29,8 +30,8 @@ class ExperimentVisualizer:
         counts, bins = np.histogram(arr, bins=np.linspace(-1, 1, 200))
         bins = 0.5 * (bins[:-1] + bins[1:])
         plt.bar(x=bins, height=counts, width=2 / len(bins))
-        plt.xlabel("Opinion []")
-        plt.ylabel("Count []")
+        plt.xlabel("Opinion $w$")
+        plt.ylabel("Count")
         plt.show(block=block)
         return plt
 
