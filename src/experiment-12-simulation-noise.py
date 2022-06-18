@@ -5,12 +5,15 @@ import matplotlib.pyplot as plt
 from helper.Dataset import Dataset
 from sklearn.linear_model import LinearRegression
 from os import path
+import subprocess
+import matplotlib as mpl
+
+mpl.style.use(path.join("src", "grayscale_adjusted.mplstyle"))
+
 
 # import dataset
-
-data = Dataset.from_json(
-    path.join("src", "datasets", "19dd290bf11a4ff6ff8a74793d7f16ae.json"), lazy=True
-)
+dataset_name = "19dd290bf11a4ff6ff8a74793d7f16ae.json"
+data = Dataset.from_json(path.join("src", "datasets", dataset_name), lazy=True)
 
 print(data.meta)
 
@@ -52,28 +55,26 @@ y_exact = y_exact / (np.array(y_exact).sum())
 y_mean = torch.mean(y, dim=0)
 
 plt.figure()
-ax = plt.plot(centers, y_mean, color="red")
-plt.plot(p, y_exact, color="green")
+ax = plt.plot(centers, y_mean, label=f"Average simulation result (n={n_samples})")
+plt.plot(p, y_exact, color="red", label="Analytical solution")
+
 
 plt.violinplot(torch.transpose(y, 0, 1), positions=centers, vert=True, widths=0.05)
-
 # plt.boxplot(torch.transpose(y,0,1),vert=True,showmeans=True)
 
 # for i in range(0,n_samples):
 #     plt.scatter(range(0,n_buckets),y[i,:],color='blue')
 
-plt.legend(
-    [
-        "Average Simulation result",
-        "Analytical Solution",
-        "Individual Simulation Distribution",
-    ]
-)
-plt.title(
-    f"Avg simulation result vs. analytical result\n{n_samples} simulations with {data.meta['experiment_assumptions']['n_samples']} agents for {data.meta['experiment_assumptions']['t_end']} time units"
-)
-
-
+plt.legend(loc="lower center")
+# plt.title(
+#     f"Avg simulation result vs. analytical result\n{n_samples} simulations with {data.meta['experiment_assumptions']['n_samples']} agents for {data.meta['experiment_assumptions']['t_end']} time units"
+# )
+#%%
+git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
+filename_str = f"experiment-12-n-{n_samples}-nagents-{data.meta['experiment_assumptions']['n_samples']}-t_horiz-{data.meta['experiment_assumptions']['t_end']}-data-{dataset_name}-git-{git_label}.png"
+experiment_data_dir = path.join("src", "experiment-data")
+plt.savefig(path.join(experiment_data_dir, filename_str))
+print(path.join(experiment_data_dir, filename_str))
 #%%
 
 RMSE = torch.sqrt(torch.mean((y - y_mean) ** 2))
