@@ -52,6 +52,8 @@ n_training_list = list(
     )
 )
 
+# n_training_list = list(np.array([64,], dtype=int))
+
 # Start training loop
 train_err_conf = list()
 val_err_conf = list()
@@ -59,18 +61,21 @@ test_err_conf = list()
 
 ## Specify network architecture to be used.
 
+iterations = 5
+
 nn_arch = {
-    "hidden_layers": 3,
-    "neurons": 150,
+    "hidden_layers": 2,
+    "neurons": 200,
     "regularization_exp": 2,
     "regularization_param": 1e-4,
     "batch_size": None,
-    "epochs": 8000,
+    "epochs": 6000,
     "optimizer": "ADAM",
-    "init_weight_seed": 42,
+    "init_weight_seed": list(range(64, 64 + iterations)),
     "activation": "tanh",
     "add_sftmax_layer": False,
 }
+
 
 #%%
 
@@ -87,46 +92,55 @@ for m in range(len(dataset_df)):
     # for diff amount of training samples
     data = dataset_df.loc[m, "objects"]
     for n in n_training_list:
-        print(n)
-        x = torch.from_numpy(data.get_inputs(end=n, silent=False)).to(torch.float)
-        x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
-        y = torch.from_numpy(
-            data.get_outputs(end=n, otype="aggregated", silent=False)
-        ).to(torch.float)
-        # train specified architecture
-        nn_arch["batch_size"] = int(n)
-        setup_properties = {
-            "hidden_layers": nn_arch["hidden_layers"],
-            "neurons": nn_arch["neurons"],
-            "regularization_exp": nn_arch["regularization_exp"],
-            "regularization_param": nn_arch["regularization_param"],
-            "batch_size": nn_arch["batch_size"],
-            "epochs": nn_arch["epochs"],
-            "optimizer": nn_arch["optimizer"],
-            "init_weight_seed": nn_arch["init_weight_seed"],
-            "activation": nn_arch["activation"],
-            "add_sftmax_layer": nn_arch["add_sftmax_layer"],
-        }
+        train_err = 0
+        val_err = 0
+        test_err = 0
+        for it in range(iterations):
+            print(n)
+            x = torch.from_numpy(data.get_inputs(end=n, silent=False)).to(torch.float)
+            x = (x - torch.Tensor([6, 0])) / torch.Tensor([12, 2])
+            y = torch.from_numpy(
+                data.get_outputs(end=n, otype="aggregated", silent=False)
+            ).to(torch.float)
+            # train specified architecture
+            nn_arch["batch_size"] = int(n)
+            setup_properties = {
+                "hidden_layers": nn_arch["hidden_layers"],
+                "neurons": nn_arch["neurons"],
+                "regularization_exp": nn_arch["regularization_exp"],
+                "regularization_param": nn_arch["regularization_param"],
+                "batch_size": nn_arch["batch_size"],
+                "epochs": nn_arch["epochs"],
+                "optimizer": nn_arch["optimizer"],
+                "init_weight_seed": nn_arch["init_weight_seed"][it],
+                "activation": nn_arch["activation"],
+                "add_sftmax_layer": nn_arch["add_sftmax_layer"],
+            }
 
-        (
-            relative_error_train_,
-            relative_error_val_,
-            relative_error_test_,
-        ) = NeuralNet.train_single_configuration(setup_properties, x, y)
+            (
+                relative_error_train_,
+                relative_error_val_,
+                relative_error_test_,
+            ) = NeuralNet.train_single_configuration(setup_properties, x, y)
+            train_err += relative_error_train_
+            val_err += relative_error_val_
+            test_err += relative_error_test_
 
+        train_err = train_err / iterations
+        val_err = val_err / iterations
+        test_err = test_err / iterations
         dat = [
             list(nn_arch.values()),
             list(dataset_df.loc[m, :]),
             [n],
-            [relative_error_train_],
-            [relative_error_val_],
-            [relative_error_test_],
+            [train_err],
+            [val_err],
+            [test_err],
         ]
         dat = [np.array(list(chain(*dat)))]
 
         result_line = pd.DataFrame(data=dat, columns=col)
         result_df = pd.concat([result_df, result_line], axis=0)
-
 
 print(result_df.columns)
 
@@ -140,21 +154,21 @@ min_n_train = min(n_training_list)
 max_n_train = max(n_training_list)
 min_resolution = min(dataset_resolutions)
 max_resolution = max(dataset_resolutions)
-name_string = f"experiment-15-size--{min_n_train}-{max_n_train}--resolution--{min_resolution}-{max_resolution}--git-{git_label}-time-{time()}.csv"
+name_string = f"experiment-15-size--{min_n_train}-{max_n_train}--resolution--{min_resolution}-{max_resolution}-its-{iterations}--git-{git_label}-time-{time()}.csv"
 result_df.to_csv(path.join("src", "experiment-data", name_string))
 print(f"saved at {path.join('src', 'experiment-data', name_string)}")
 
 
 #%%
 
-# result_df = pd.read_csv(path.join("src", "experiment-data", name_string))
-result_df = pd.read_csv(
-    path.join(
-        "src",
-        "experiment-data",
-        "experiment-15-size--64-2048--resolution--32-16384--git-exp-4-working-98-g4fb7ad0-time-1654426261.325137.csv",
-    )
-)
+result_df = pd.read_csv(path.join("src", "experiment-data", name_string))
+# result_df = pd.read_csv(
+#     path.join(
+#         "src",
+#         "experiment-data",
+#         "experiment-15-size--64-2048--resolution--32-16384--git-exp-16-working-10-g10f8030-time-1655338745.6362383.csv",
+#     )
+# )
 
 print(result_df)
 print(result_df.columns)
@@ -164,26 +178,24 @@ print(result_df.columns)
 
 resolutions = sorted(set(result_df["resolution"]))
 
+mpl.rcParams["axes.labelsize"] = 12
 
 f = plt.figure()
 for r in resolutions:
     df_res = result_df[result_df["resolution"] == r].sort_values("n train samples")
     print(r)
     print(df_res.loc[:, ["n train samples", "test err"]])
-    plt.semilogx(
+    # print(df_mean)
+    plt.loglog(
         df_res["n train samples"],
-        df_res["test err MRAE"],
+        df_res["test err"],
         label=f"{r} particles",
     )
-plt.xlabel("# training samples")
+plt.xlabel("# training samples N")
 plt.ylabel("test error")
 plt.legend()
 plt.show()
 
 f.savefig(
-    path.join(
-        "src",
-        "experiment-data",
-        "experiment-15-size--64-2048--resolution--32-16384--git-exp-4-working-98-g4fb7ad0-time-1654426261.325137.eps",
-    )
+    path.join("src", "experiment-data", f"{name_string}.eps"), bbox_inches="tight"
 )
