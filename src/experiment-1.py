@@ -5,15 +5,16 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from os import path
+import subprocess
 
 matplotlib.style.use(path.join("grayscale_adjusted.mplstyle"))
-
+matplotlib.
 # case: P = 1, D = 1-w^2
 
 # Parameter initialization
-lamb = 0.1
-mean_opinion = 0.5
-nagents = 1000
+lamb = 1
+mean_opinion = -.1
+nagents = 10000
 t_horiz = 200
 
 # theta_std = 0.1
@@ -74,10 +75,17 @@ np.save(
 # Generating figure
 plt.ion()
 fig = plt.figure()
-plt.bar(x=bins, height=counts, width=2 / len(bins), color="gray")
-plt.plot(reference["w"], reference["g_inf(w)"])
-plt.suptitle(f"Steady Opinion Profile for P = 1 and D = 1- w^2")
-plt.title(f"lambda= {lamb}, n= {nagents} and {t_horiz} simulated time units")
-plt.xlabel("Opinion []")
-plt.ylabel("Count []")
-plt.show(block=True)
+# plt.bar(x=bins, height=counts, width=2 / len(bins), color="gray", label="Simulation result histogram")
+plt.plot(reference["w"], reference["g_inf(w)"], label="analytic solution - reference")
+# plt.suptitle(f"Steady Opinion Profile for P = 1 and D = 1- w^2")
+# plt.title(f"lambda= {lamb}, n= {nagents} and {t_horiz} simulated time units")
+plt.xlabel("Opinion $w$")
+plt.ylabel("$g_\infty(w)$")
+
+git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
+plt.savefig(
+            path.join(
+                "experiment-data",
+                f"no-hist-uniform-theta-lambda-{lamb}-mean-{mean_opinion}-nagents-{nagents}-t-horiz-{t_horiz}-git-{git_label}.eps",
+            )
+        )
