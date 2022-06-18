@@ -76,6 +76,7 @@ parser.add_argument(
     help="random number generator seed to be used",
 )
 parser.add_argument("--show", action="store_true")
+
 parser.add_argument(
     "-loc",
     "--nn-loc",
@@ -84,6 +85,8 @@ parser.add_argument(
     default=None,
     help="Specify file location of the NN surrogate model to be used.",
 )
+
+
 args = parser.parse_args()
 
 if args.seed is None:
@@ -114,7 +117,7 @@ proposal_step_size = args.proposal
 solver_settings = dict(
     num_rounds=args.samples,
     num_burn_in=args.burn,
-    initial_sample=dict(lmb=1.5, m=-0.2),
+    initial_sample=dict(lmb=0.5, m=0.5),
     proposal_std=dict(lmb=proposal_step_size, m=proposal_step_size),
     lh_type="nn",
 )
@@ -141,10 +144,14 @@ noisy_observed_data = InverseProblem.add_noise(observed_data, noise_std)
 problem = InverseProblem(noisy_observed_data, experiment_assumptions, solver_settings)
 samples = problem.solve(silent=True)
 
+nn_names = {
+    "models\\nn-in-2-out-20-hid-2-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-568-data-e3513ee46f1829cd90d7e07973b5e4f1.json-resol-512-n_tr-64-opt-ADAM-ep-4000-batch-64-tr_time-12.pt": "light",
+    "models\\nn-in-2-out-20-hid-4-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-567-data-8aef15d64f53b52a4735756a4fe868bf.json-resol-16384-n_tr-1000-opt-ADAM-ep-6000-batch-1000-tr_time-148.pt": "heavy",
+}
 
 output_file = os.path.join(
     "experiment-data",
-    f"experiment-16--{synth_data_file}--noise-{noise_std}-n_observations-{n_observations}-num_rounds-{solver_settings['num_rounds']}-burn_in-{solver_settings['num_burn_in']}-proposal--{solver_settings['proposal_std']['lmb']}-{solver_settings['proposal_std']['m']}--initial_sample--{solver_settings['initial_sample']['lmb']}-{solver_settings['initial_sample']['m']}-nn-{solver_settings['lh_type']}-start-{start_minutes}-seed-{seed}",
+    f"experiment-16--{synth_data_file}--noise-{noise_std}-n_observations-{n_observations}-num_rounds-{solver_settings['num_rounds']}-burn_in-{solver_settings['num_burn_in']}-proposal--{solver_settings['proposal_std']['lmb']}-{solver_settings['proposal_std']['m']}--initial_sample--{solver_settings['initial_sample']['lmb']}-{solver_settings['initial_sample']['m']}-nn-{nn_names[args.nn_loc]}-start-{start_minutes}-seed-{seed}",
 )
 
 np.savez(output_file, nn=args.nn_loc, lmb=samples["lmb"], m=samples["m"])
