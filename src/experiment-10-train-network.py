@@ -8,11 +8,14 @@ import winsound
 from os import path
 from torch.utils.data import DataLoader
 import time
+import matplotlib as mpl
 
 # import dataset
 
-# dataset_name = "7d0ca7a38db3c6cf84efa7bfa36e8a7e.json"
-dataset_name = "e3513ee46f1829cd90d7e07973b5e4f1.json"
+mpl.style.use(path.join("src", "grayscale_adjusted.mplstyle"))
+
+# dataset_name = "8aef15d64f53b52a4735756a4fe868bf.json" #resolution: 16384
+dataset_name = "e3513ee46f1829cd90d7e07973b5e4f1.json"  # resolution: 512
 data = Dataset.from_json(path.join("src", "datasets", dataset_name), lazy=True)
 
 # data.compute_aggregated_output(20)
@@ -36,6 +39,21 @@ x = transform_input(x)
 
 #%%
 visual = None
+
+hyperparameters_configurations = {
+    "hidden_layers": [1, 2, 3],
+    "neurons": [100, 200, 300],
+    "regularization_exp": [2],
+    "regularization_param": [0, 1e-4],
+    "batch_size": [n_samples],
+    "epochs": [1000, 2000, 4000],
+    "optimizer": ["ADAM"],
+    "init_weight_seed": [567, 134, 124],
+    "activation": ["tanh"],
+    "add_sftmax_layer": [False],
+}
+visual = False
+# n tr 64 r tr 512 - 27.29%
 
 # hyperparameters_configurations = {
 #     "hidden_layers": [1],
@@ -171,20 +189,36 @@ visual = None
 # visual = False
 # 6 - 3 layers, 8000 epochs - 12.6% test error
 # 6 - analytical test - 2l, 4000 - 21.8% t, 13 tr, 14 v
+# 1 1000 samples 16384 particles - l 3 200 n 23.0% analyt test
 
-hyperparameters_configurations = {
-    "hidden_layers": [2],
-    "neurons": [200],
-    "regularization_exp": [2],
-    "regularization_param": [0, 1e-4],
-    "batch_size": [n_samples],
-    "epochs": [4000],
-    "optimizer": ["ADAM"],
-    "init_weight_seed": [568],
-    "activation": ["tanh"],
-    "add_sftmax_layer": [False],
-}
-visual = False
+# hyperparameters_configurations = {
+#     "hidden_layers": [3, 4],
+#     "neurons": [200,300,400],
+#     "regularization_exp": [2],
+#     "regularization_param": [0,1e-4],
+#     "batch_size": [n_samples],
+#     "epochs": [6000, 8000, 12000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [567],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
+# 2 1000 samples 16384 particles - 21.35% l4 n 200 e 6000 reg 1e-4-2
+
+# hyperparameters_configurations = {
+#     "hidden_layers": [2],
+#     "neurons": [200],
+#     "regularization_exp": [2],
+#     "regularization_param": [0, 1e-4],
+#     "batch_size": [n_samples],
+#     "epochs": [4000],
+#     "optimizer": ["ADAM"],
+#     "init_weight_seed": [568],
+#     "activation": ["tanh"],
+#     "add_sftmax_layer": [False],
+# }
+# visual = False
 
 settings = list(itertools.product(*hyperparameters_configurations.values()))
 print(len(settings))
@@ -324,22 +358,23 @@ for i in range(x_test.shape[0]):
     plt.legend()
     plt.xlabel("Opinion $w$")
     plt.ylabel("$P_T(w)$")
-    plt.title(f"$\lambda$ = {x[i,0]:.2f} $m$ = {x[i,1]:.2f}")
-    plt.show(block=True)
-    prediction_name_str = f"experiment-10-pred-result-{model_filename}-input-{x[i,0]:.2f}-{x[i,1]:.2f}.png"
+    plt.title(f"$\lambda$ = {x_test[i,0]:.2f} $m$ = {x_test[i,1]:.2f}")
+    plt.show(block=False)
+    prediction_name_str = f"experiment-10-pred-result-{model_filename}-input-{x_test[i,0]:.2f}-{x_test[i,1]:.2f}.eps"
     f.savefig(path.join("src", "experiment-data", prediction_name_str))
 
 
 #%% save and load model and make prediction again
 
-print(surrogate_model.state_dict())
+# print(surrogate_model.state_dict())
 models_folder = path.join("src", "models")
+#%%
 torch.save(surrogate_model, path.join(models_folder, model_filename))
 
 #%%
 
-
-model_filename = "nn-in-2-out-20-hid-2-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-568-data-e3513ee46f1829cd90d7e07973b5e4f1.json-resol-512-n_tr-64-opt-ADAM-ep-4000-batch-64.pt"
+# model_filename = "nn-in-2-out-20-hid-2-n-300-activ-tanh-regul-0.0001-2-soft-False-rng-124-data-e3513ee46f1829cd90d7e07973b5e4f1.json-resol-512-n_tr-64-opt-ADAM-ep-4000-batch-64-tr_time-15.pt"
+model_filename = "nn-in-2-out-20-hid-4-n-200-activ-tanh-regul-0.0001-2-soft-False-rng-567-data-8aef15d64f53b52a4735756a4fe868bf.json-resol-16384-n_tr-1000-opt-ADAM-ep-6000-batch-1000-tr_time-148.pt"
 
 loaded_model = torch.load(
     path.join(
@@ -348,5 +383,6 @@ loaded_model = torch.load(
     )
 )
 loaded_model = torch.load(path.join(models_folder, model_filename))
+#%%
 loaded_inference = loaded_model.forward(transform_input(x_test))
 print(torch.all(loaded_inference == test_pred))
