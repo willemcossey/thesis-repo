@@ -4,6 +4,9 @@ import numpy as np
 from math import sqrt
 from os import path
 import subprocess
+import matplotlib as mpl
+
+mpl.style.use(path.join("src", "grayscale_adjusted.mplstyle"))
 
 # from copy import deepcopy
 from tqdm import tqdm
@@ -94,6 +97,7 @@ for a in range(len_n_agents):
 git_label = subprocess.check_output(["git", "describe"]).strip().decode("utf-8")
 filename_str = f"experiment-13-p-{n_parconfig}-i-{n_instances_per_parconfig}-a-{low_n_agents}-{high_n_agents}-{len_n_agents}-t_horiz-{t_horiz_for_instance}-n-{n_buckets}-seed-{seed}-git-{git_label}"
 experiment_data_dir = path.join("src", "experiment-data")
+#%%
 np.savez(path.join(experiment_data_dir, f"{filename_str}.npz"), errors=errors)
 
 #%%
@@ -102,7 +106,7 @@ np.savez(path.join(experiment_data_dir, f"{filename_str}.npz"), errors=errors)
 f = np.load(
     path.join(
         experiment_data_dir,
-        f"experiment-14-p-3-i-100-a-2-2-1-t-10-ts-60-n-20-seed-3540192740-git-exp-4-working-98-g4fb7ad0.npz",
+        f"experiment-13-p-5-i-10-a-2-4-8-t_horiz-100-n-20-seed-42-git-exp-16-working-4-gf788e3b.npz",
     )
 )
 errors = f["errors"]
@@ -116,19 +120,21 @@ mean_error = [
 
 print(mean_error)
 
+mpl.rcParams["axes.labelsize"] = 12
+
 plt.figure()
-plt.loglog(n_agents_for_instance, mean_error, label="mean RMAE")
+plt.loglog(n_agents_for_instance, mean_error, label="mean RAE")
 plt.loglog(
     np.linspace(10**2, 10**4, 100),
     0.1 * np.power(np.linspace(10**2, 10**4, 100), -0.5),
     linestyle="--",
-    label="$x^{-1/2}$ reference",
+    label="$N^{-1/2}$ reference",
 )
-plt.xlabel("#particles simulated")
-plt.ylabel("Relative Mean Absolute error")
+plt.xlabel("#particles simulated $N$")
+plt.ylabel("Relative Absolute error")
 # plt.title(
 #     f"#configurations = {n_parconfig}, #repetitions = {n_instances_per_parconfig}, #buckets = {n_buckets}"
 # )
 plt.legend()
 # plt.show(block=True)
-plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-1.png"))
+plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-1.eps"))
