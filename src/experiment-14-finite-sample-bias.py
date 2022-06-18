@@ -139,15 +139,19 @@ avg_data = np.mean(data, axis=0)
 y_exact = [inv_dist(s, ms[p], lmbs[p]) for s in x]
 y_exact = y_exact / (np.array(y_exact).sum())
 
+mpl.rcParams["axes.labelsize"] = 12
+
 plt.figure()
 n_lines_in_plot = 4
+plt.plot(x, y_exact, label=f"analytical solution", color="red")
 for t in range(0, n_timesteps, floor(n_timesteps / n_lines_in_plot)):
     plt.plot(centers, avg_data[t], label=f"t = {(t+1)*t_step}")
-plt.plot(x, y_exact, label=f"analytical solution", color="red")
+plt.xlabel("Opinion $w$")
+plt.ylabel("$P_T(w)$")
 plt.legend()
 # plt.show()
 plt.savefig(
-    path.join(experiment_data_dir, f"{filename_str}-figure-1.png"),
+    path.join(experiment_data_dir, f"{filename_str}-figure-1.eps"),
     bbox_inches="tight",
     dpi=600,
 )
@@ -180,23 +184,76 @@ n_lines_in_plot = 4
 step = 15
 # for t in range(n_timesteps-1, n_timesteps - (n_lines_in_plot)*step, -step):
 for t in range(9, 10):
-    plt.loglog(n_agents_for_instance, err_agg[:, t], label=f"t = {(t+1)*t_step}")
+    plt.loglog(n_agents_for_instance, err_agg[:, t])
 plt.loglog(
     np.power(10, np.linspace(2, 4, 8)),
     2 * 1e-1 * np.power(np.power(10, np.linspace(2, 4, 8)), -0.1),
-    label="$n^{-1/10}$ reference",
+    label="$N^{-1/10}$ reference",
     linestyle="--",
 )
 plt.legend()
-plt.xlabel("#particles simulated")
+plt.xlabel("#simulated particles N")
 plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
 # plt.show()
-# plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-2.png"),bbox_inches='tight',dpi=600)
+# plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-2.eps"),bbox_inches='tight',dpi=600)
 plt.savefig(
-    path.join(experiment_data_dir, f"{filename_str}-figure-2-time-{time.time()}.png"),
+    path.join(experiment_data_dir, f"{filename_str}-figure-2-time-{time.time()}.eps"),
     bbox_inches="tight",
     dpi="figure",
 )
+
+
+#%% experiment: bias approx.
+
+
+data = result_list
+
+mean_data = np.mean(data, axis=4)
+
+exact_solutions = [inv_dist_norm(centers, ms[p], lmbs[p]) for p in range(n_parconfig)]
+
+errors = np.ones(data.shape[:-1])
+
+for p in range(n_parconfig):
+    for i in range(n_instances_per_parconfig):
+        for a in range(len(n_agents_for_instance)):
+            for t in range(n_timesteps):
+                errors[a, p, i, t] = np.linalg.norm(
+                    mean_data[a, p, i, t] - exact_solutions[p], 2
+                )
+
+
+print(errors)
+
+err_agg = np.abs(np.mean(errors, axis=(1, 2)))
+
+plt.figure()
+if len_n_agents == 1:
+    plt.loglog(
+        n_agents_for_instance, err_agg[:, t], label=f"t = {(t+1)*t_step}", marker="o"
+    )
+n_lines_in_plot = 4
+step = 15
+for t in range(n_timesteps - 1, n_timesteps - (n_lines_in_plot) * step, -step):
+    # for t in range(9, 10):
+    plt.loglog(n_agents_for_instance, err_agg[:, t])
+plt.loglog(
+    np.power(10, np.linspace(2, 4, 8)),
+    2 * 1e-1 * np.power(np.power(10, np.linspace(2, 4, 8)), -0.1),
+    label="$N^{-1/10}$ reference",
+    linestyle="--",
+)
+plt.legend()
+plt.xlabel("#simulated particles N")
+plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
+# plt.show()
+# plt.savefig(path.join(experiment_data_dir, f"{filename_str}-figure-2.eps"),bbox_inches='tight',dpi=600)
+# plt.savefig(
+#     path.join(experiment_data_dir, f"{filename_str}-figure-2-time-{time.time()}.eps"),
+#     bbox_inches="tight",
+#     dpi="figure",
+# )
+
 
 #%% mean wrt i as a function of t for fixed a
 
@@ -218,24 +275,24 @@ for p in range(n_parconfig):
 err_agg = np.mean(errors, axis=(1, 2))
 
 plt.figure()
+plt.loglog(
+    np.power(10, np.linspace(1, 2, 8)),
+    0.6 * np.power(np.power(10, np.linspace(1, 2, 8)), -0.5),
+    label="$t^{-1/2}$ reference",
+)
 for a in range(len(n_agents_for_instance)):
     plt.loglog(
         [(t + 1) * t_step for t in range(n_timesteps)],
         err_agg[a, :],
         label=f"{n_agents_for_instance[a]} particles",
     )
-plt.loglog(
-    np.power(10, np.linspace(1, 2, 8)),
-    0.6 * np.power(np.power(10, np.linspace(1, 2, 8)), -0.5),
-    label="$t^{-1/2}$ reference",
-    linestyle="--",
-)
+
 plt.legend()
 plt.xlabel("simulated time")
 plt.ylabel(f"MSE (n={n_instances_per_parconfig*n_parconfig})")
 # plt.show()
 plt.savefig(
-    path.join(experiment_data_dir, f"{filename_str}-figure-3.png"),
+    path.join(experiment_data_dir, f"{filename_str}-figure-3.eps"),
     bbox_inches="tight",
     dpi=600,
 )
@@ -274,7 +331,7 @@ plt.fill_between(
 )
 plt.plot([(t + 1) * t_step for t in range(n_timesteps)], err_mean)
 plt.xlabel("simulated time")
-plt.ylabel("$|avg solution - analytical solution|_{L^2}$")
+plt.ylabel("Mean Squared Error")
 # plt.show()
 plt.savefig(
     path.join(experiment_data_dir, f"{filename_str}-figure-4.png"),
@@ -325,7 +382,7 @@ for p in range(n_parconfig):
         label=f"m={ms[p]:.2f}, lmb={lmbs[p]:.2f}",
     )
 plt.xlabel("simulated time")
-plt.ylabel(r"$\mathbb{E}(\Vert\hat{f}(\theta,t) - f(\theta)\Vert_{L^2}$)")
+plt.ylabel(r"Mean Squared Error")
 plt.legend()
 # plt.show()
 plt.savefig(
