@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 import matplotlib as mpl
 
-mpl.style.use(os.path("grayscale_adjusted.mplstyle"))
+mpl.style.use(os.path.join("src", "grayscale_adjusted.mplstyle"))
 
 synth_data_file = "synth-data-lmb-1-m--0.1-t_horiz-200-nagents-100000.npy"
 
@@ -36,7 +36,7 @@ for noise_std in np.linspace(0, 2, 11):
     p.savefig(
         os.path.join(
             "src",
-            f"experiment-data/add-noise-validation/experiment-6-noise_std-{noise_std}-to-{synth_data_file}-.png",
+            f"experiment-data/add-noise-validation/experiment-6-noise_std-{noise_std}-to-{synth_data_file}-.eps",
         )
     )
     # p.show()
